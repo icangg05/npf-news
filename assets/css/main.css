@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ---- Palet profesional ----
+       Primary  : Indigo (brand, tepercaya)
+       Secondary: Slate lembut (permukaan)
+       Accent   : Gold/amber (aksen "emas") */
+    --background: 231 44% 93%;
+    --foreground: 224 47% 14%;
+
+    --card: 231 45% 98%;
+    --card-foreground: 224 47% 14%;
+
+    --popover: 231 45% 98%;
+    --popover-foreground: 224 47% 14%;
+
+    --primary: 231 55% 50%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 231 34% 89%;
+    --secondary-foreground: 231 42% 26%;
+
+    --muted: 231 32% 90%;
+    --muted-foreground: 231 18% 44%;
+
+    --accent: 231 52% 86%;
+    --accent-foreground: 231 50% 34%;
+
+    --gold: 38 92% 50%;
+    --gold-foreground: 30 60% 14%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 152 60% 40%;
+    --success-foreground: 210 40% 98%;
+
+    --border: 231 30% 84%;
+    --input: 231 30% 82%;
+    --ring: 231 55% 50%;
+
+    --radius: 0.4rem;
+  }
+
+  .dark {
+    --background: 224 40% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 34% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 34% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 231 62% 68%;
+    --primary-foreground: 224 45% 12%;
+
+    --secondary: 217 30% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 30% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 231 40% 22%;
+    --accent-foreground: 231 62% 82%;
+
+    --gold: 38 92% 55%;
+    --gold-foreground: 30 60% 12%;
+
+    --destructive: 0 62% 47%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 152 55% 45%;
+    --success-foreground: 224 45% 12%;
+
+    --border: 217 30% 22%;
+    --input: 217 30% 24%;
+    --ring: 231 62% 68%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+}
+
+/* Latar berwarna (mesh gradient) — brand indigo + emas + violet */
+.app-bg {
+  background:
+    radial-gradient(48rem 40rem at 100% -6%, hsl(var(--gold) / 0.20), transparent 55%),
+    radial-gradient(46rem 42rem at -6% 2%, hsl(var(--primary) / 0.26), transparent 55%),
+    radial-gradient(42rem 40rem at 50% 118%, hsl(262 65% 55% / 0.16), transparent 60%),
+    linear-gradient(180deg, hsl(231 46% 95%), hsl(231 44% 91%));
+  background-attachment: fixed;
+}
+
+/* ---- Ornamen latar ---- */
+.bg-ornaments {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* garis grid halus dengan mask memudar */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.06) 1px, transparent 1px);
+  background-size: 42px 42px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  opacity: 0.5;
+}
+.blob-a {
+  width: 26rem; height: 26rem;
+  top: -6rem; right: -6rem;
+  background: radial-gradient(circle, hsl(var(--gold) / 0.5), transparent 70%);
+  animation: floaty 16s ease-in-out infinite;
+}
+.blob-b {
+  width: 24rem; height: 24rem;
+  bottom: -8rem; left: -6rem;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.45), transparent 70%);
+  animation: floaty 20s ease-in-out infinite reverse;
+}
+.ring-ornament {
+  position: absolute;
+  top: 20%; left: 60%;
+  width: 30rem; height: 30rem;
+  border: 1px solid hsl(var(--primary) / 0.08);
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 40px hsl(var(--primary) / 0.03);
+  animation: spin-slow 90s linear infinite;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-24px, 26px) scale(1.06); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob, .ring-ornament { animation: none; }
+}
+
+/* reaksi hover kartu */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -12px hsl(var(--primary) / 0.35);
+}

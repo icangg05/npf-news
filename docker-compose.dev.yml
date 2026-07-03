@@ -1,0 +1,27 @@
+# Dev override with hot reload.
+# Run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    image: nfp-gold-history:dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # bind-mount source for live edits...
+      - .:/app
+      # ...but keep the container's own node_modules and .nuxt cache
+      - /app/node_modules
+      - /app/.nuxt
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - NUXT_HOST=0.0.0.0
+      - NITRO_HOST=0.0.0.0
+      # ensures file-change events cross the Docker bind-mount boundary
+      - CHOKIDAR_USEPOLLING=true
+    env_file:
+      - .env
