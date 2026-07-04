@@ -40,7 +40,7 @@ watch(() => route.fullPath, () => (open.value = false))
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
+  <header class="fixed inset-x-0 top-0 z-40 border-b bg-background">
     <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
       <NuxtLink to="/" class="flex items-center gap-2.5 font-display font-bold">
         <span class="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-sm shadow-primary/30 ring-1 ring-gold/40">

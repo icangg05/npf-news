@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/toast'
 </script>
 
 <template>
-  <div class="app-bg flex min-h-screen flex-col">
+  <div class="app-bg flex min-h-screen flex-col pt-14">
     <!-- Indikator loading pindah halaman (warna brand: indigo -> emas) -->
     <NuxtLoadingIndicator
       color="linear-gradient(to right, hsl(231 55% 50%), hsl(38 92% 50%))"
