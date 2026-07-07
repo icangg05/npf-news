@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LineChart, LogOut } from 'lucide-vue-next'
+import { LogOut } from 'lucide-vue-next'
 
 const { links, isActive, user } = useNav()
 const client = useSupabaseClient()
@@ -15,10 +15,8 @@ async function logout() {
   <header class="glass fixed inset-x-0 top-0 z-40 border-x-0 border-t-0">
     <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
       <NuxtLink to="/" class="flex items-center gap-2.5 font-display font-bold">
-        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-gold to-amber-600 text-gold-foreground shadow-lg shadow-gold/30 ring-1 ring-white/20">
-          <LineChart class="h-5 w-5" />
-        </span>
-        <span>NFP <span class="text-gold">×</span> <span class="text-muted-foreground font-medium">Emas</span></span>
+        <AppLogo class="shadow-sm shadow-gold/20 ring-1 ring-white/10" />
+        <span class="text-lg tracking-tight">Au<span class="text-gold">Pulse</span></span>
       </NuxtLink>
 
       <!-- Nav desktop -->

@@ -18,14 +18,25 @@ function edit(id: string) {
   router.push(`/admin/${id}`)
 }
 
-async function onRemove(s: NfpSession) {
-  if (!confirm(`Hapus sesi ${formatDate(s.released_at)} beserta ${s.nfp_news?.length ?? 0} berita? Tindakan ini tidak bisa dibatalkan.`)) return
+// ---- hapus (modal konfirmasi) ----
+const toDelete = ref<NfpSession | null>(null)
+const deleting = ref(false)
+const confirmOpen = computed({
+  get: () => !!toDelete.value,
+  set: (v: boolean) => { if (!v) toDelete.value = null },
+})
+async function confirmDelete() {
+  if (!toDelete.value) return
+  deleting.value = true
   try {
-    await remove(s.id)
+    await remove(toDelete.value.id)
+    toDelete.value = null
     await refresh()
     toast.success('Sesi dihapus.')
   } catch (e: any) {
     toast.error(e?.message ?? 'Gagal menghapus sesi.')
+  } finally {
+    deleting.value = false
   }
 }
 </script>
@@ -42,6 +53,14 @@ async function onRemove(s: NfpSession) {
     </PageHero>
 
     <div v-if="pending" class="py-16 text-center text-muted-foreground">Memuat…</div>
-    <SessionsTable v-else :sessions="sessions" @edit="edit" @remove="onRemove" />
+    <SessionsTable v-else :sessions="sessions" @edit="edit" @remove="(s) => toDelete = s" />
+
+    <ConfirmModal
+      v-model:open="confirmOpen"
+      title="Hapus sesi?"
+      :description="toDelete ? `Sesi ${formatDate(toDelete.released_at)} beserta ${toDelete.nfp_news?.length ?? 0} berita akan dihapus permanen.` : ''"
+      :loading="deleting"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>

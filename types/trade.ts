@@ -5,6 +5,7 @@ export interface Trade {
   trade_date: string // YYYY-MM-DD
   amount: number
   currency: Currency
+  trade_count: number // jumlah transaksi pada entri ini
   note: string | null
   created_at: string
   updated_at: string
@@ -14,6 +15,7 @@ export interface TradeInput {
   trade_date: string
   amount: number
   currency: Currency
+  trade_count: number
   note: string | null
 }
 

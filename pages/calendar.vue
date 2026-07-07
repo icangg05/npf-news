@@ -106,6 +106,9 @@ const dayOpen = computed({
 function onSelectDay(cell: DayCell) {
   selectedDay.value = cell
 }
+const dayTradeCount = computed(() =>
+  (selectedDay.value?.items ?? []).reduce((a, t) => a + (t.trade_count ?? 1), 0),
+)
 const dayTone = (total: number) =>
   total > 0 ? 'text-emerald-600 dark:text-emerald-400' : total < 0 ? 'text-destructive' : 'text-muted-foreground'
 </script>
@@ -137,6 +140,11 @@ const dayTone = (total: number) =>
               <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
             </div>
 
+            <!-- Update kurs: tepat di samping kanan pengubah bulan -->
+            <Button v-if="user" variant="gold" size="sm" :disabled="updatingRate" @click="onUpdateRate">
+              <RefreshCw class="h-4 w-4" :class="updatingRate && 'animate-spin'" /> Update kurs
+            </Button>
+
             <div>
               <Label class="mb-1.5 block text-xs text-muted-foreground">Dari</Label>
               <Input v-model="from" type="date" class="w-36" />
@@ -163,9 +171,6 @@ const dayTone = (total: number) =>
               <span class="hidden rounded-md border bg-card px-2.5 py-1.5 sm:inline">
                 1 USD = <span class="font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
               </span>
-              <Button v-if="user" variant="gold" size="sm" :disabled="updatingRate" @click="onUpdateRate">
-                <RefreshCw class="h-4 w-4" :class="updatingRate && 'animate-spin'" /> Update kurs
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -205,9 +210,6 @@ const dayTone = (total: number) =>
             </CardContent>
           </Card>
         </div>
-
-        <!-- Kalender -->
-        <CalendarView :year="viewYear" :month="viewMonth" :trades="trades ?? []" :currency="currency" :usd-idr="usdIdr" @select="onSelectDay" />
       </TabsContent>
 
       <!-- ===== TAB 2: Kalender saja (fokus, tampilan lega) ===== -->
@@ -244,7 +246,7 @@ const dayTone = (total: number) =>
                 {{ formatCurrency(selectedDay.total, currency) }}
               </span>
             </div>
-            <DialogDescription>{{ selectedDay.items.length }} trade pada hari ini.</DialogDescription>
+            <DialogDescription>{{ dayTradeCount }} trade dalam {{ selectedDay.items.length }} entri.</DialogDescription>
           </DialogHeader>
 
           <ul class="mt-4 space-y-3">
@@ -253,7 +255,10 @@ const dayTone = (total: number) =>
                 <span class="font-display text-lg font-bold" :class="t.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'">
                   {{ formatCurrency(t.amount, t.currency) }}
                 </span>
-                <span class="rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{{ t.currency }}</span>
+                <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span>{{ t.trade_count ?? 1 }} trade</span>
+                  <span class="rounded-md bg-muted px-2 py-0.5 font-semibold">{{ t.currency }}</span>
+                </div>
               </div>
               <div v-if="t.note" class="rte-content mt-2 border-t pt-2 text-sm" v-html="t.note" />
             </li>

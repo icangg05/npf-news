@@ -18,8 +18,8 @@ const props = defineProps<{ class?: HTMLAttributes['class']; fullscreen?: boolea
       :class="cn(
         'glass-card fixed z-50 grid gap-4 p-5 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         fullscreen
-          ? 'inset-0 h-[100dvh] w-screen max-w-none overflow-y-auto rounded-none border-0 data-[state=open]:slide-in-from-bottom-4'
-          : 'left-1/2 top-1/2 max-h-[92dvh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
+          ? 'inset-0 h-[100dvh] w-screen max-w-none overflow-y-auto rounded-none border-0 data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-4'
+          : 'inset-x-0 bottom-0 max-h-[92dvh] w-full overflow-y-auto rounded-b-none data-[state=open]:slide-in-from-bottom-6 data-[state=closed]:slide-out-to-bottom-6 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-b-[var(--radius)]',
         props.class,
       )"
     >

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Trade, Currency } from '~/types/trade'
 import { CURRENCIES } from '~/types/trade'
-import { Plus, Trash2, X, Loader2, Check, Wallet, CalendarDays, ChevronRight } from 'lucide-vue-next'
+import { Plus, Trash2, X, Loader2, Check, Wallet, CalendarDays, ChevronRight, Hash } from 'lucide-vue-next'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -16,6 +16,7 @@ const editingId = ref<string | null>(null)
 const date = ref('')
 const amount = ref('')
 const currency = ref<Currency>('USC')
+const count = ref('1')
 const note = ref('')
 const saving = ref(false)
 
@@ -24,6 +25,7 @@ function resetForm() {
   date.value = ''
   amount.value = ''
   currency.value = 'USC'
+  count.value = '1'
   note.value = ''
 }
 
@@ -38,6 +40,7 @@ function openEdit(t: Trade) {
   date.value = t.trade_date
   amount.value = String(t.amount)
   currency.value = t.currency
+  count.value = String(t.trade_count ?? 1)
   note.value = t.note ?? ''
   formOpen.value = true
 }
@@ -49,7 +52,13 @@ async function save() {
   const isEdit = !!editingId.value
   saving.value = true
   try {
-    const payload = { trade_date: date.value, amount: Number(amount.value), currency: currency.value, note: note.value || null }
+    const payload = {
+      trade_date: date.value,
+      amount: Number(amount.value),
+      currency: currency.value,
+      trade_count: Math.max(0, Math.round(Number(count.value) || 1)),
+      note: note.value || null,
+    }
     if (editingId.value) await update(editingId.value, payload)
     else await create(payload)
     formOpen.value = false
@@ -63,15 +72,26 @@ async function save() {
   }
 }
 
-async function onRemove(t: Trade) {
-  if (!confirm(`Hapus trade ${formatDateStr(t.trade_date)}?`)) return
+// ---- hapus (modal konfirmasi) ----
+const toDelete = ref<Trade | null>(null)
+const deleting = ref(false)
+const confirmOpen = computed({
+  get: () => !!toDelete.value,
+  set: (v: boolean) => { if (!v) toDelete.value = null },
+})
+async function confirmDelete() {
+  if (!toDelete.value) return
+  deleting.value = true
   try {
-    await remove(t.id)
-    if (editingId.value === t.id) { formOpen.value = false; resetForm() }
+    await remove(toDelete.value.id)
+    if (editingId.value === toDelete.value.id) { formOpen.value = false; resetForm() }
+    toDelete.value = null
     await refresh()
     toast.success('Trade dihapus.')
   } catch (e: any) {
     toast.error(e?.message ?? 'Gagal menghapus trade.')
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -108,10 +128,13 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
               {{ formatCurrency(t.amount, t.currency) }}
             </div>
           </div>
-          <span class="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{{ t.currency }}</span>
+          <div class="flex shrink-0 flex-col items-end gap-1">
+            <span class="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{{ t.currency }}</span>
+            <span class="flex items-center gap-1 text-[11px] text-muted-foreground"><Hash class="h-3 w-3" />{{ t.trade_count ?? 1 }} trade</span>
+          </div>
         </div>
-        <div v-if="stripHtml(t.note)" class="mt-2 flex items-center justify-between gap-2 border-t pt-2">
-          <span class="truncate text-[11px] text-muted-foreground">{{ stripHtml(t.note) }}</span>
+        <div v-if="stripHtml(t.note)" class="mt-2 border-t pt-2">
+          <span class="line-clamp-2 text-[11px] text-muted-foreground">{{ stripHtml(t.note) }}</span>
         </div>
         <div class="mt-2 flex justify-end">
           <span
@@ -119,8 +142,8 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
             tabindex="0"
             class="flex h-7 w-7 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
             aria-label="Hapus"
-            @click.stop="onRemove(t)"
-            @keydown.enter.stop="onRemove(t)"
+            @click.stop="toDelete = t"
+            @keydown.enter.stop="toDelete = t"
           >
             <Trash2 class="h-4 w-4" />
           </span>
@@ -139,6 +162,7 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
             <TableHead>Tanggal</TableHead>
             <TableHead class="text-right">Jumlah</TableHead>
             <TableHead>Mata uang</TableHead>
+            <TableHead class="text-center"># Trade</TableHead>
             <TableHead>Catatan</TableHead>
             <TableHead class="text-right">Aksi</TableHead>
           </TableRow>
@@ -150,15 +174,16 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
               {{ formatCurrency(t.amount, t.currency) }}
             </TableCell>
             <TableCell><span class="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold">{{ t.currency }}</span></TableCell>
-            <TableCell class="max-w-[280px] truncate text-muted-foreground">{{ stripHtml(t.note) || '—' }}</TableCell>
+            <TableCell class="text-center tabular-nums">{{ t.trade_count ?? 1 }}</TableCell>
+            <TableCell class="max-w-[260px] truncate text-muted-foreground">{{ stripHtml(t.note) || '—' }}</TableCell>
             <TableCell class="whitespace-nowrap text-right">
-              <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:text-destructive" aria-label="Hapus" @click.stop="onRemove(t)">
+              <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:text-destructive" aria-label="Hapus" @click.stop="toDelete = t">
                 <Trash2 class="h-4 w-4" />
               </Button>
               <ChevronRight class="ml-1 inline h-4 w-4 text-muted-foreground/50" />
             </TableCell>
           </TableRow>
-          <TableEmpty v-if="!trades.length" :colspan="5">Belum ada trade.</TableEmpty>
+          <TableEmpty v-if="!trades.length" :colspan="6">Belum ada trade.</TableEmpty>
         </TableBody>
       </Table>
     </Card>
@@ -189,6 +214,10 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
               </SelectContent>
             </Select>
           </div>
+          <div class="sm:col-span-6">
+            <Label class="mb-1.5 block text-xs">Jumlah trade</Label>
+            <Input v-model="count" type="number" inputmode="numeric" min="0" step="1" placeholder="mis. 3" />
+          </div>
           <div class="sm:col-span-12">
             <Label class="mb-1.5 block text-xs">Catatan / kesimpulan</Label>
             <RichTextEditor v-model="note" placeholder="Ringkasan / kesimpulan trade hari itu…" />
@@ -208,5 +237,14 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
         </form>
       </DialogContent>
     </Dialog>
+
+    <!-- ===== Modal konfirmasi hapus ===== -->
+    <ConfirmModal
+      v-model:open="confirmOpen"
+      title="Hapus trade?"
+      :description="toDelete ? `Trade ${formatDateStr(toDelete.trade_date)} akan dihapus permanen.` : ''"
+      :loading="deleting"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>

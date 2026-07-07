@@ -71,7 +71,7 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
-      name: 'AuPulse — NFP × Emas',
+      name: 'AuPulse',
       short_name: 'AuPulse',
       description: 'AuPulse — pantau denyut emas (XAU/USD) terhadap rilis Non-Farm Payrolls.',
       lang: 'id',

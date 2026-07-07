@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NfpSession, NfpFilters } from '~/types/nfp'
-import { Sparkles } from 'lucide-vue-next'
+import { Sparkles, BarChart3, Newspaper } from 'lucide-vue-next'
 
 const { list } = useNfpSessions()
 
@@ -37,22 +37,36 @@ const filtered = computed(() => {
       <template #title>Riwayat <span class="text-gold">NFP</span> vs Pergerakan Emas</template>
     </PageHero>
 
-    <StatCards :sessions="filtered" />
-    <FilterBar v-model="filters" />
+    <Tabs default-value="statistik" class="space-y-5">
+      <TabsList>
+        <TabsTrigger value="statistik"><BarChart3 class="h-4 w-4" /> Statistik</TabsTrigger>
+        <TabsTrigger value="berita"><Newspaper class="h-4 w-4" /> Berita</TabsTrigger>
+      </TabsList>
 
-    <div v-if="pending" class="py-16 text-center text-muted-foreground">Memuat data…</div>
-    <Card v-else-if="error" class="border-destructive/40">
-      <CardContent class="py-10 text-center text-destructive">
-        Gagal memuat data. Pastikan koneksi Supabase &amp; tabel sudah dibuat.
-      </CardContent>
-    </Card>
-    <template v-else>
-      <div class="space-y-4">
-        <SessionCard v-for="s in filtered" :key="s.id" :session="s" />
-      </div>
-      <Card v-if="!filtered.length">
-        <CardContent class="py-16 text-center text-muted-foreground">Belum ada data sesi.</CardContent>
-      </Card>
-    </template>
+      <!-- TAB 1: Kartu statistik -->
+      <TabsContent value="statistik">
+        <StatCards :sessions="filtered" />
+      </TabsContent>
+
+      <!-- TAB 2: Pencarian + daftar berita -->
+      <TabsContent value="berita" class="space-y-4">
+        <FilterBar v-model="filters" />
+
+        <div v-if="pending" class="py-16 text-center text-muted-foreground">Memuat data…</div>
+        <Card v-else-if="error" class="border-destructive/40">
+          <CardContent class="py-10 text-center text-destructive">
+            Gagal memuat data. Pastikan koneksi Supabase &amp; tabel sudah dibuat.
+          </CardContent>
+        </Card>
+        <template v-else>
+          <div class="space-y-4">
+            <SessionCard v-for="s in filtered" :key="s.id" :session="s" />
+          </div>
+          <Card v-if="!filtered.length">
+            <CardContent class="py-16 text-center text-muted-foreground">Belum ada data sesi.</CardContent>
+          </Card>
+        </template>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
