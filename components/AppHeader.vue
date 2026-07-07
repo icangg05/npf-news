@@ -41,9 +41,12 @@ async function logout() {
         <ThemeToggle />
       </nav>
 
-      <!-- Mobile: hanya toggle tema (navigasi ada di tab bar bawah) -->
-      <div class="sm:hidden">
+      <!-- Mobile: toggle tema + logout (navigasi ada di tab bar bawah) -->
+      <div class="flex items-center gap-1 sm:hidden">
         <ThemeToggle />
+        <Button v-if="user" variant="ghost" size="icon" class="text-muted-foreground" aria-label="Keluar" @click="logout">
+          <LogOut class="h-5 w-5" />
+        </Button>
       </div>
     </div>
   </header>

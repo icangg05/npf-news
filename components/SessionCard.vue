@@ -72,11 +72,11 @@ const majorTone = computed(() => {
         </span>
         <div>
           <span class="text-muted-foreground">Pips minor: </span>
-          <span class="font-semibold">{{ formatNumber(s.minor_pips) }}</span>
+          <span class="font-semibold">{{ formatThousands(s.minor_pips) }}</span>
         </div>
         <div>
           <span class="text-muted-foreground">Pips major: </span>
-          <span class="text-sm font-bold" :class="majorTone">{{ formatNumber(s.major_pips) }}</span>
+          <span class="text-sm font-bold" :class="majorTone">{{ formatThousands(s.major_pips) }}</span>
         </div>
         <div v-if="s.note" class="rte-content basis-full text-[11px] text-muted-foreground sm:basis-auto" v-html="s.note" />
       </div>

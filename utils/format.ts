@@ -25,6 +25,14 @@ export function formatNumber(value: number | null | undefined, unit?: string | n
   return unit ? `${str}${unit}` : str
 }
 
+// Seperti formatNumber, tapi dengan pemisah ribuan titik (id-ID). mis. 1500 -> "1.500".
+// Dipakai di kartu ringkasan (bukan nilai di dalam tabel berita).
+export function formatThousands(value: number | null | undefined, unit?: string | null): string {
+  if (value == null) return '—'
+  const str = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(Number(value))
+  return unit ? `${str}${unit}` : str
+}
+
 // input string -> number | null (untuk field angka opsional)
 export function numOrNull(value: string): number | null {
   if (value === '' || value == null) return null

@@ -124,10 +124,17 @@ const dayTone = (total: number) =>
     </PageHero>
 
     <Tabs default-value="ringkasan" class="space-y-5">
-      <TabsList>
-        <TabsTrigger value="ringkasan"><LayoutDashboard class="h-4 w-4" /> Ringkasan</TabsTrigger>
-        <TabsTrigger value="kalender"><CalendarRange class="h-4 w-4" /> Kalender</TabsTrigger>
-      </TabsList>
+      <div class="flex items-center justify-between gap-3">
+        <TabsList>
+          <TabsTrigger value="ringkasan"><LayoutDashboard class="h-4 w-4" /> Ringkasan</TabsTrigger>
+          <TabsTrigger value="kalender"><CalendarRange class="h-4 w-4" /> Kalender</TabsTrigger>
+        </TabsList>
+
+        <!-- Kurs saat ini: sejajar dengan tab, rapat ke kanan -->
+        <span class="hidden items-center rounded-md border bg-card px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+          1&nbsp;USD&nbsp;= <span class="ml-1 font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
+        </span>
+      </div>
 
       <!-- ===== TAB 1: Ringkasan (kontrol + statistik + kalender) ===== -->
       <TabsContent value="ringkasan" class="space-y-5">
@@ -165,12 +172,6 @@ const dayTone = (total: number) =>
                 :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
                 @click="currency = c"
               >{{ c }}</button>
-            </div>
-
-            <div class="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-              <span class="hidden rounded-md border bg-card px-2.5 py-1.5 sm:inline">
-                1 USD = <span class="font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
-              </span>
             </div>
           </CardContent>
         </Card>
@@ -250,7 +251,7 @@ const dayTone = (total: number) =>
                 {{ formatCurrency(selectedDay.total, currency) }}
               </span>
             </div>
-            <DialogDescription>{{ dayTradeCount }} trade dalam {{ selectedDay.items.length }} entri.</DialogDescription>
+            <DialogDescription>{{ dayTradeCount }} trade dalam {{ selectedDay.items.length }} hari.</DialogDescription>
           </DialogHeader>
 
           <ul class="mt-4 space-y-3">

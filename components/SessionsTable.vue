@@ -36,8 +36,8 @@ const majorTone = (s: NfpSession) =>
         </div>
 
         <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs">
-          <span class="text-muted-foreground">Minor: <span class="font-semibold text-foreground">{{ formatNumber(s.minor_pips) }}</span></span>
-          <span class="text-muted-foreground">Major: <span class="font-bold" :class="majorTone(s)">{{ formatNumber(s.major_pips) }}</span></span>
+          <span class="text-muted-foreground">Minor: <span class="font-semibold text-foreground">{{ formatThousands(s.minor_pips) }}</span></span>
+          <span class="text-muted-foreground">Major: <span class="font-bold" :class="majorTone(s)">{{ formatThousands(s.major_pips) }}</span></span>
         </div>
 
         <div class="mt-2 flex items-center justify-between gap-2 border-t pt-2">
@@ -99,8 +99,8 @@ const majorTone = (s: NfpSession) =>
               </div>
             </TableCell>
             <TableCell><DirectionBadge :direction="s.direction" /></TableCell>
-            <TableCell class="text-right">{{ formatNumber(s.minor_pips) }}</TableCell>
-            <TableCell class="text-right font-semibold" :class="majorTone(s)">{{ formatNumber(s.major_pips) }}</TableCell>
+            <TableCell class="text-right">{{ formatThousands(s.minor_pips) }}</TableCell>
+            <TableCell class="text-right font-semibold" :class="majorTone(s)">{{ formatThousands(s.major_pips) }}</TableCell>
             <TableCell class="text-center">
               <SpikeBadge :spike="s.spike" />
             </TableCell>

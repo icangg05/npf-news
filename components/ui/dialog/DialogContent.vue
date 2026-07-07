@@ -1,11 +1,49 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
-import { DialogClose, DialogContent, DialogOverlay, DialogPortal } from 'reka-ui'
+import { DialogClose, DialogContent, DialogOverlay, DialogPortal, injectDialogRootContext } from 'reka-ui'
 import { X } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 
 defineOptions({ inheritAttrs: false })
 const props = defineProps<{ class?: HTMLAttributes['class']; fullscreen?: boolean }>()
+
+// Khusus mobile: saat modal terbuka, dorong satu entri riwayat agar gesture/tombol
+// "kembali" menutup modal alih-alih meninggalkan halaman.
+const rootContext = injectDialogRootContext()
+if (import.meta.client) {
+  let pushed = false
+
+  const onPopState = () => {
+    // Kembali ditekan saat modal terbuka -> tutup modal (entri sudah di-pop browser).
+    pushed = false
+    window.removeEventListener('popstate', onPopState)
+    rootContext.onOpenChange(false)
+  }
+
+  const engage = () => {
+    if (pushed || !window.matchMedia('(max-width: 767px)').matches) return
+    window.history.pushState({ rekaDialog: true }, '')
+    window.addEventListener('popstate', onPopState)
+    pushed = true
+  }
+
+  const disengage = () => {
+    if (!pushed) return
+    // Ditutup bukan lewat tombol kembali -> buang entri riwayat tambahan.
+    pushed = false
+    window.removeEventListener('popstate', onPopState)
+    window.history.back()
+  }
+
+  watch(() => rootContext.open.value, (open) => {
+    if (open) engage()
+    else disengage()
+  })
+
+  onScopeDispose(() => {
+    if (pushed) window.removeEventListener('popstate', onPopState)
+  })
+}
 </script>
 
 <template>

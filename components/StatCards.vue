@@ -36,17 +36,17 @@ const stats = computed(() => {
 })
 
 const cards = computed(() => [
-  { label: 'Total sesi', value: stats.value.total, icon: CalendarClock, tone: 'text-foreground' },
-  { label: 'Total berita', value: stats.value.totalNews, icon: Newspaper, tone: 'text-foreground' },
+  { label: 'Total sesi', value: formatThousands(stats.value.total), icon: CalendarClock, tone: 'text-foreground' },
+  { label: 'Total berita', value: formatThousands(stats.value.totalNews), icon: Newspaper, tone: 'text-foreground' },
   {
     label: 'Rata-rata pips minor',
-    value: stats.value.avgMinor != null ? `${stats.value.avgMinor}` : '—',
+    value: formatThousands(stats.value.avgMinor),
     icon: Waves,
     tone: 'text-sky-600 dark:text-sky-400',
   },
   {
     label: 'Rata-rata pips major',
-    value: stats.value.avgMajor != null ? `${stats.value.avgMajor}` : '—',
+    value: formatThousands(stats.value.avgMajor),
     icon: Activity,
     tone: 'text-indigo-600 dark:text-indigo-400',
   },
