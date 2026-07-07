@@ -195,18 +195,22 @@ const dayTone = (total: number) =>
           </Card>
           <Card class="hover-lift">
             <CardContent class="p-4">
-              <div class="text-xs font-medium text-muted-foreground">Profit / Loss</div>
-              <div class="mt-1 flex items-center gap-3 font-display text-xl font-bold sm:text-2xl">
+              <div class="text-xs font-medium text-muted-foreground">Hari profit / loss</div>
+              <div class="mt-1 flex items-baseline gap-2.5 font-display text-xl font-bold sm:text-2xl">
                 <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><TrendingUp class="h-4 w-4" /> {{ wins }}</span>
                 <span class="text-border">/</span>
                 <span class="flex items-center gap-1 text-destructive"><TrendingDown class="h-4 w-4" /> {{ loss }}</span>
+                <span class="text-xs font-medium text-muted-foreground">hari</span>
               </div>
             </CardContent>
           </Card>
           <Card class="hover-lift">
             <CardContent class="p-4">
-              <div class="text-xs font-medium text-muted-foreground">Jumlah trade</div>
-              <div class="mt-1 font-display text-xl font-bold sm:text-2xl">{{ rangeTrades.length }}</div>
+              <div class="text-xs font-medium text-muted-foreground">Total hari</div>
+              <div class="mt-1 flex items-baseline gap-1.5 font-display text-xl font-bold sm:text-2xl">
+                {{ rangeTrades.length }}
+                <span class="text-xs font-medium text-muted-foreground">hari</span>
+              </div>
             </CardContent>
           </Card>
         </div>

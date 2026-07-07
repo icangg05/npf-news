@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NfpSession } from '~/types/nfp'
-import { CalendarClock, Activity, Waves, Newspaper, Zap, Gauge, MoveRight } from 'lucide-vue-next'
+import { CalendarClock, Activity, Waves, Newspaper, Zap, Gauge } from 'lucide-vue-next'
 
 const props = defineProps<{ sessions: NfpSession[] }>()
 
@@ -57,16 +57,10 @@ const cards = computed(() => [
     tone: 'text-emerald-600 dark:text-emerald-400',
   },
   {
-    label: 'Spike (atas/bawah)',
-    value: stats.value.spikes,
+    label: 'Spike / Satu arah',
+    value: `${stats.value.spikes} / ${stats.value.oneWay}`,
     icon: Zap,
     tone: 'text-amber-600 dark:text-amber-400',
-  },
-  {
-    label: 'Satu arah',
-    value: stats.value.oneWay,
-    icon: MoveRight,
-    tone: 'text-slate-600 dark:text-slate-300',
   },
 ])
 </script>
