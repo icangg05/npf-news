@@ -86,7 +86,7 @@ const features = [
           <div class="p-6 sm:p-8">
             <!-- logo mobile -->
             <div class="mb-6 flex items-center gap-2.5 font-display text-lg font-bold md:hidden">
-              <AppLogo class="ring-1 ring-white/10" />
+              <AppLogo class="shadow-sm shadow-gold/20 ring-1 ring-border" />
               Au<span class="-ml-1 text-gold">Pulse</span>
             </div>
 
