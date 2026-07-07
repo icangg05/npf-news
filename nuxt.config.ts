@@ -6,21 +6,30 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/tailwindcss',
     '@nuxtjs/google-fonts',
+    '@nuxtjs/color-mode',
     'shadcn-nuxt',
     '@nuxtjs/supabase',
     '@nuxt/icon',
+    '@vite-pwa/nuxt',
   ],
 
   css: ['~/assets/css/main.css'],
 
-  // Font tema: Plus Jakarta Sans (judul) + Inter (teks), di-selfhost
+  // Font tema: Space Grotesk (judul + teks), di-selfhost
   googleFonts: {
     families: {
-      Inter: [400, 500, 600, 700],
-      'Plus Jakarta Sans': [500, 600, 700, 800],
+      'Space Grotesk': [400, 500, 600, 700],
     },
     display: 'swap',
     download: true,
+  },
+
+  // Dark/light mode via class (`.dark`). Default mengikuti sistem.
+  colorMode: {
+    classSuffix: '',
+    preference: 'system',
+    fallback: 'dark',
+    storageKey: 'nfp-color-mode',
   },
 
   // shadcn-vue components live in components/ui and import without a prefix
@@ -43,9 +52,54 @@ export default defineNuxtConfig({
     head: {
       title: 'Riwayat NFP vs Emas',
       meta: [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'description', content: 'Riwayat rilis Non-Farm Payrolls dan dampaknya terhadap harga emas (XAU/USD).' },
+        { name: 'theme-color', content: '#0B0E14' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'apple-mobile-web-app-title', content: 'NFP × Emas' },
       ],
+      link: [
+        { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
+    },
+  },
+
+  // Progressive Web App — installable, offline-ready shell.
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'Riwayat NFP vs Emas',
+      short_name: 'NFP × Emas',
+      description: 'Riwayat rilis Non-Farm Payrolls dan dampaknya terhadap harga emas (XAU/USD).',
+      lang: 'id',
+      theme_color: '#0B0E14',
+      background_color: '#0B0E14',
+      display: 'standalone',
+      orientation: 'portrait',
+      start_url: '/',
+      scope: '/',
+      categories: ['finance', 'business'],
+      icons: [
+        { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+        { src: '/maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+    },
+    client: {
+      installPrompt: true,
+    },
+    // Aktifkan `enabled: true` bila ingin menguji service worker saat `npm run dev`.
+    // Dimatikan secara default agar SW tidak meng-cache saat HMR (build produksi tetap PWA penuh).
+    devOptions: {
+      enabled: false,
+      type: 'module',
     },
   },
 

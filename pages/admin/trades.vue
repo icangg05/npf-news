@@ -104,7 +104,7 @@ async function onRemove(t: Trade) {
           </div>
           <div class="sm:col-span-12">
             <Label class="mb-1.5 block text-xs">Catatan / kesimpulan</Label>
-            <Textarea v-model="note" placeholder="Ringkasan / kesimpulan trade hari itu…" />
+            <RichTextEditor v-model="note" placeholder="Ringkasan / kesimpulan trade hari itu…" />
           </div>
           <div class="flex items-center gap-2 sm:col-span-12">
             <Button type="submit" :disabled="!valid || saving">
@@ -140,7 +140,7 @@ async function onRemove(t: Trade) {
               {{ formatCurrency(t.amount, t.currency) }}
             </TableCell>
             <TableCell><span class="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold">{{ t.currency }}</span></TableCell>
-            <TableCell class="max-w-[280px] truncate text-muted-foreground">{{ t.note || '—' }}</TableCell>
+            <TableCell class="max-w-[280px] truncate text-muted-foreground">{{ stripHtml(t.note) || '—' }}</TableCell>
             <TableCell class="text-right whitespace-nowrap">
               <Button variant="ghost" size="icon" class="h-8 w-8" @click="startEdit(t)"><Pencil class="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:text-destructive" @click="onRemove(t)"><Trash2 class="h-4 w-4" /></Button>

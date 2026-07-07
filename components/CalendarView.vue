@@ -82,7 +82,7 @@ function toneClass(total: number, hasItems: boolean): string {
             <button
               type="button"
               class="group relative flex min-h-[54px] w-full flex-col items-start gap-0.5 border-b border-r p-1.5 text-left transition-colors last:border-r-0 hover:bg-accent/40 focus:outline-none focus-visible:bg-accent/60 sm:min-h-[92px] sm:p-2"
-              :class="[!c.inMonth && 'bg-muted/20', c.isToday && 'ring-1 ring-inset ring-primary']"
+              :class="[!c.inMonth && 'bg-muted/20', c.isToday && 'ring-1 ring-inset ring-primary/30']"
             >
               <span
                 class="flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-medium sm:text-xs"
@@ -101,7 +101,7 @@ function toneClass(total: number, hasItems: boolean): string {
                 {{ formatCurrency(c.total, currency) }}
               </span>
             </div>
-            <ul class="space-y-2">
+            <ul class="table-scroll max-h-72 space-y-2 overflow-y-auto">
               <li v-for="t in c.items" :key="t.id" class="text-xs">
                 <div class="flex items-center justify-between gap-2">
                   <span class="font-medium" :class="t.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'">
@@ -109,7 +109,7 @@ function toneClass(total: number, hasItems: boolean): string {
                   </span>
                   <span class="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{{ t.currency }}</span>
                 </div>
-                <p v-if="t.note" class="mt-0.5 text-muted-foreground">{{ t.note }}</p>
+                <div v-if="t.note" class="rte-content mt-1 text-muted-foreground" v-html="t.note" />
               </li>
             </ul>
           </HoverCardContent>
@@ -119,7 +119,7 @@ function toneClass(total: number, hasItems: boolean): string {
         <div
           v-else
           class="min-h-[54px] border-b border-r p-1.5 last:border-r-0 sm:min-h-[92px] sm:p-2"
-          :class="[!c.inMonth && 'bg-muted/20', c.isToday && 'ring-1 ring-inset ring-primary']"
+          :class="[!c.inMonth && 'bg-muted/20', c.isToday && 'ring-1 ring-inset ring-primary/30']"
         >
           <span
             class="flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-medium sm:text-xs"

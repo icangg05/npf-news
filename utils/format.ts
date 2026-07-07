@@ -97,3 +97,16 @@ export function formatDateStr(s: string): string {
   const [y, m, d] = s.split('-').map(Number)
   return `${String(d).padStart(2, '0')} ${MONTHS[m - 1]} ${y}`
 }
+
+// Buang tag HTML -> teks polos (untuk pratinjau ringkas di tabel).
+export function stripHtml(html: string | null | undefined): string {
+  if (!html) return ''
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim()
+}

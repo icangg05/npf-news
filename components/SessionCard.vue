@@ -67,6 +67,9 @@ const majorTone = computed(() => {
 
       <!-- Ringkasan pergerakan emas -->
       <div class="flex flex-wrap items-center gap-x-6 gap-y-1 border-t bg-muted/20 px-4 py-2 text-[13px]">
+        <span class="inline-flex items-center rounded-md border border-gold/30 bg-gold/10 px-2 py-0.5 font-mono text-[11px] font-bold tracking-wider text-gold">
+          XAU/USD
+        </span>
         <div>
           <span class="text-muted-foreground">Pips minor: </span>
           <span class="font-semibold">{{ formatNumber(s.minor_pips) }}</span>

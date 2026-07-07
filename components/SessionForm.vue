@@ -33,19 +33,19 @@ function blankNews(): NewsRow {
 // pisahkan ISO -> tanggal & waktu lokal
 const dt = props.initial ? toDatetimeLocal(props.initial.released_at).split('T') : ['', '12:30']
 
-// ---- state (langkah 1: waktu) ----
+// ---- state (waktu) ----
 const period = ref<string>(props.initial?.period_label ?? '')
 const date = ref<string>(dt[0] ?? '')
 const time = ref<string>(dt[1] ?? '12:30')
 
-// ---- state (langkah 2: kesimpulan reaksi) ----
+// ---- state (kesimpulan reaksi) ----
 const spike = ref<string>(props.initial?.spike ?? '')
 const direction = ref<string>(props.initial?.direction ?? 'up')
 const minor = ref<string>(props.initial?.minor_pips != null ? String(props.initial.minor_pips) : '')
 const major = ref<string>(props.initial?.major_pips != null ? String(props.initial.major_pips) : '')
 const note = ref<string>(props.initial?.note ?? '')
 
-// ---- state (langkah 3: berita) ----
+// ---- state (berita) ----
 const news = ref<NewsRow[]>(
   props.initial?.nfp_news?.length
     ? props.initial.nfp_news.map((n) => ({
@@ -100,88 +100,11 @@ function onSubmit() {
 
 <template>
   <form class="space-y-6" @submit.prevent="onSubmit">
-    <!-- LANGKAH 1: Waktu rilis -->
+    <!-- LANGKAH 1: Daftar berita -->
     <Card>
       <CardHeader class="pb-4">
         <CardTitle class="flex items-center gap-2 text-base">
           <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">1</span>
-          <CalendarClock class="h-4 w-4" /> Waktu Rilis
-        </CardTitle>
-        <CardDescription>Tentukan bulan lalu tanggal &amp; jam. Satu tanggal+jam = satu kesimpulan reaksi.</CardDescription>
-      </CardHeader>
-      <CardContent class="grid gap-4 sm:grid-cols-3">
-        <div>
-          <Label class="mb-1.5 block">Bulan (periode data)</Label>
-          <Select v-model="period">
-            <SelectTrigger><SelectValue placeholder="Pilih bulan" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="m in MONTHS" :key="m" :value="m">{{ m }}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label class="mb-1.5 block">Tanggal rilis *</Label>
-          <Input v-model="date" type="date" />
-        </div>
-        <div>
-          <Label class="mb-1.5 block">Jam rilis *</Label>
-          <Input v-model="time" type="time" />
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- LANGKAH 2: Kesimpulan reaksi emas -->
-    <Card>
-      <CardHeader class="pb-4">
-        <CardTitle class="flex items-center gap-2 text-base">
-          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">2</span>
-          <TrendingUp class="h-4 w-4" /> Kesimpulan Reaksi Emas
-        </CardTitle>
-        <CardDescription>Satu kesimpulan untuk seluruh berita di sesi ini.</CardDescription>
-      </CardHeader>
-      <CardContent class="grid gap-4 sm:grid-cols-4">
-        <div>
-          <Label class="mb-1.5 block">Spike</Label>
-          <Select v-model="spike">
-            <SelectTrigger><SelectValue placeholder="Pilih spike" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="up">Spike atas</SelectItem>
-              <SelectItem value="down">Spike bawah</SelectItem>
-              <SelectItem value="one_way">Satu arah</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label class="mb-1.5 block">Arah emas</Label>
-          <Select v-model="direction">
-            <SelectTrigger><SelectValue placeholder="Pilih arah" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="up">Naik</SelectItem>
-              <SelectItem value="down">Turun</SelectItem>
-              <SelectItem value="neutral">Sideways</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label class="mb-1.5 block">Pips minor</Label>
-          <Input v-model="minor" type="number" inputmode="numeric" placeholder="mis. 120" />
-        </div>
-        <div>
-          <Label class="mb-1.5 block">Pips major</Label>
-          <Input v-model="major" type="number" inputmode="numeric" placeholder="mis. 748" />
-        </div>
-        <div class="sm:col-span-4">
-          <Label class="mb-1.5 block">Catatan</Label>
-          <Textarea v-model="note" placeholder="Konteks pergerakan setelah news…" />
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- LANGKAH 3: Daftar berita -->
-    <Card>
-      <CardHeader class="pb-4">
-        <CardTitle class="flex items-center gap-2 text-base">
-          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">3</span>
           <Newspaper class="h-4 w-4" /> Daftar Berita
         </CardTitle>
         <CardDescription>Berita yang rilis bersamaan (mis. NFP + NFP Private).</CardDescription>
@@ -244,6 +167,83 @@ function onSubmit() {
         <Button type="button" variant="outline" size="sm" @click="addNews">
           <Plus class="h-4 w-4" /> Tambah berita
         </Button>
+      </CardContent>
+    </Card>
+
+    <!-- LANGKAH 2: Waktu rilis -->
+    <Card>
+      <CardHeader class="pb-4">
+        <CardTitle class="flex items-center gap-2 text-base">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">2</span>
+          <CalendarClock class="h-4 w-4" /> Waktu Rilis
+        </CardTitle>
+        <CardDescription>Tentukan bulan lalu tanggal &amp; jam. Satu tanggal+jam = satu kesimpulan reaksi.</CardDescription>
+      </CardHeader>
+      <CardContent class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <Label class="mb-1.5 block">Bulan (periode data)</Label>
+          <Select v-model="period">
+            <SelectTrigger><SelectValue placeholder="Pilih bulan" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="m in MONTHS" :key="m" :value="m">{{ m }}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label class="mb-1.5 block">Tanggal rilis *</Label>
+          <Input v-model="date" type="date" />
+        </div>
+        <div>
+          <Label class="mb-1.5 block">Jam rilis *</Label>
+          <Input v-model="time" type="time" />
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- LANGKAH 3: Kesimpulan reaksi emas -->
+    <Card>
+      <CardHeader class="pb-4">
+        <CardTitle class="flex items-center gap-2 text-base">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">3</span>
+          <TrendingUp class="h-4 w-4" /> Kesimpulan Reaksi Emas
+        </CardTitle>
+        <CardDescription>Satu kesimpulan untuk seluruh berita di sesi ini.</CardDescription>
+      </CardHeader>
+      <CardContent class="grid gap-4 sm:grid-cols-4">
+        <div>
+          <Label class="mb-1.5 block">Spike</Label>
+          <Select v-model="spike">
+            <SelectTrigger><SelectValue placeholder="Pilih spike" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="up">Spike atas</SelectItem>
+              <SelectItem value="down">Spike bawah</SelectItem>
+              <SelectItem value="one_way">Satu arah</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label class="mb-1.5 block">Arah emas</Label>
+          <Select v-model="direction">
+            <SelectTrigger><SelectValue placeholder="Pilih arah" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="up">Naik</SelectItem>
+              <SelectItem value="down">Turun</SelectItem>
+              <SelectItem value="neutral">Sideways</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label class="mb-1.5 block">Pips minor</Label>
+          <Input v-model="minor" type="number" inputmode="numeric" placeholder="mis. 120" />
+        </div>
+        <div>
+          <Label class="mb-1.5 block">Pips major</Label>
+          <Input v-model="major" type="number" inputmode="numeric" placeholder="mis. 748" />
+        </div>
+        <div class="sm:col-span-4">
+          <Label class="mb-1.5 block">Catatan</Label>
+          <Textarea v-model="note" placeholder="Konteks pergerakan setelah news…" />
+        </div>
       </CardContent>
     </Card>
 

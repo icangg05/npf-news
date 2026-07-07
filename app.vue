@@ -4,9 +4,9 @@ import { Toaster } from '@/components/ui/toast'
 
 <template>
   <div class="app-bg flex min-h-screen flex-col pt-14">
-    <!-- Indikator loading pindah halaman (warna brand: indigo -> emas) -->
+    <!-- Indikator loading pindah halaman (aksen emas -> cyan) -->
     <NuxtLoadingIndicator
-      color="linear-gradient(to right, hsl(231 55% 50%), hsl(38 92% 50%))"
+      color="linear-gradient(to right, hsl(43 96% 56%), hsl(187 92% 56%))"
       :height="3"
     />
 
@@ -20,11 +20,15 @@ import { Toaster } from '@/components/ui/toast'
 
     <AppHeader />
     <Toaster />
-    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
+    <!-- pb ekstra di mobile agar konten tidak tertutup tab bar -->
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-24 sm:py-8 sm:pb-8">
       <NuxtPage />
     </main>
-    <footer class="border-t py-6 text-center text-xs text-muted-foreground">
+    <footer class="border-t py-6 pb-24 text-center text-xs text-muted-foreground sm:pb-6">
       Riwayat NFP vs Emas · Developer by Ilmi Faizan
     </footer>
+
+    <!-- Tab bar navigasi (mobile) -->
+    <MobileTabBar />
   </div>
 </template>

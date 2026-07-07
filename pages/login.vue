@@ -39,7 +39,7 @@ const features = [
 
 <template>
   <div class="mx-auto mt-4 max-w-4xl sm:mt-10">
-    <Card class="overflow-hidden shadow-xl">
+    <Card class="overflow-hidden shadow-sm">
       <div class="grid md:grid-cols-2">
         <!-- Panel brand -->
         <div class="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary to-indigo-700 p-8 text-primary-foreground md:flex">

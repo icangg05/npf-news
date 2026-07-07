@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F131C"/>
+      <stop offset="1" stop-color="#0B0E14"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD873"/>
+      <stop offset="0.55" stop-color="#F5B72E"/>
+      <stop offset="1" stop-color="#E0961B"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2"/>
+  <!-- upward trend line -->
+  <polyline points="96,352 176,288 240,320 336,192 416,144"
+    fill="none" stroke="url(#gold)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- arrow head -->
+  <path d="M372 140 L416 144 L412 188" fill="none" stroke="url(#gold)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- node dots -->
+  <circle cx="96" cy="352" r="16" fill="#0B0E14" stroke="url(#gold)" stroke-width="12"/>
+  <circle cx="240" cy="320" r="16" fill="#0B0E14" stroke="#5CE1E6" stroke-width="12"/>
+  <!-- baseline glow bar -->
+  <rect x="96" y="392" width="320" height="8" rx="4" fill="#F5B72E" fill-opacity="0.25"/>
+</svg>
