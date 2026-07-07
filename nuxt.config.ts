@@ -50,14 +50,14 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Riwayat NFP vs Emas',
+      title: 'AuPulse — NFP × Emas',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'description', content: 'Riwayat rilis Non-Farm Payrolls dan dampaknya terhadap harga emas (XAU/USD).' },
+        { name: 'description', content: 'AuPulse — pantau denyut emas (XAU/USD) terhadap rilis Non-Farm Payrolls.' },
         { name: 'theme-color', content: '#0B0E14' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-mobile-web-app-title', content: 'NFP × Emas' },
+        { name: 'apple-mobile-web-app-title', content: 'AuPulse' },
       ],
       link: [
         { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
@@ -71,9 +71,9 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
-      name: 'Riwayat NFP vs Emas',
-      short_name: 'NFP × Emas',
-      description: 'Riwayat rilis Non-Farm Payrolls dan dampaknya terhadap harga emas (XAU/USD).',
+      name: 'AuPulse — NFP × Emas',
+      short_name: 'AuPulse',
+      description: 'AuPulse — pantau denyut emas (XAU/USD) terhadap rilis Non-Farm Payrolls.',
       lang: 'id',
       theme_color: '#0B0E14',
       background_color: '#0B0E14',
