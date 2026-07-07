@@ -106,6 +106,27 @@ const dayOpen = computed({
 function onSelectDay(cell: DayCell) {
   selectedDay.value = cell
 }
+
+// Tekan tombol kembali (browser/HP) menutup modal, bukan pindah halaman.
+let poppingFromBack = false
+function onPopState() {
+  if (selectedDay.value) {
+    poppingFromBack = true
+    selectedDay.value = null
+  }
+}
+watch(selectedDay, (val, old) => {
+  if (val && !old) {
+    // modal dibuka → sisipkan entri history agar "kembali" tertangkap di sini
+    history.pushState({ dayModal: true }, '')
+  } else if (!val && old) {
+    // modal ditutup lewat X/backdrop → buang entri history yang tadi disisipkan
+    if (poppingFromBack) poppingFromBack = false
+    else history.back()
+  }
+})
+onMounted(() => window.addEventListener('popstate', onPopState))
+onBeforeUnmount(() => window.removeEventListener('popstate', onPopState))
 const dayTradeCount = computed(() =>
   (selectedDay.value?.items ?? []).reduce((a, t) => a + (t.trade_count ?? 1), 0),
 )
@@ -124,16 +145,27 @@ const dayTone = (total: number) =>
     </PageHero>
 
     <Tabs default-value="ringkasan" class="space-y-5">
-      <div class="flex items-center justify-between gap-3">
+      <div class="relative flex flex-col items-center justify-center gap-3 sm:flex-row">
         <TabsList>
           <TabsTrigger value="ringkasan"><LayoutDashboard class="h-4 w-4" /> Ringkasan</TabsTrigger>
           <TabsTrigger value="kalender"><CalendarRange class="h-4 w-4" /> Kalender</TabsTrigger>
         </TabsList>
 
-        <!-- Kurs saat ini: sejajar dengan tab, rapat ke kanan -->
-        <span class="hidden items-center rounded-md border bg-card px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-flex">
-          1&nbsp;USD&nbsp;= <span class="ml-1 font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
-        </span>
+        <!-- Kurs saat ini + tombol update kurs: rapat ke kanan (desktop) -->
+        <div class="flex items-center gap-2 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+          <span class="hidden items-center rounded-md border bg-card px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+            1&nbsp;USD&nbsp;= <span class="ml-1 font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
+          </span>
+          <Button
+            v-if="user"
+            variant="gold"
+            :disabled="updatingRate"
+            class="h-7 gap-1.5 rounded-full px-3 text-xs [&_svg]:size-3.5"
+            @click="onUpdateRate"
+          >
+            <RefreshCw :class="updatingRate && 'animate-spin'" /> Update kurs
+          </Button>
+        </div>
       </div>
 
       <!-- ===== TAB 1: Ringkasan (kontrol + statistik + kalender) ===== -->
@@ -147,9 +179,9 @@ const dayTone = (total: number) =>
               <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
             </div>
 
-            <!-- Update kurs: tepat di samping kanan pengubah bulan -->
-            <Button v-if="user" variant="gold" size="sm" :disabled="updatingRate" @click="onUpdateRate">
-              <RefreshCw class="h-4 w-4" :class="updatingRate && 'animate-spin'" /> Update kurs
+            <!-- Reset: tepat di samping kanan pengubah bulan -->
+            <Button variant="ghost" size="sm" @click="resetRange">
+              <X class="h-4 w-4" /> Reset
             </Button>
 
             <div>
@@ -160,18 +192,18 @@ const dayTone = (total: number) =>
               <Label class="mb-1.5 block text-xs text-muted-foreground">Sampai</Label>
               <Input v-model="to" type="date" class="w-36" />
             </div>
-            <Button variant="ghost" size="sm" @click="resetRange">
-              <X class="h-4 w-4" /> Reset
-            </Button>
 
-            <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
-              <button
-                v-for="c in CURRENCIES"
-                :key="c"
-                class="rounded px-3 py-1 text-xs font-semibold transition-colors"
-                :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
-                @click="currency = c"
-              >{{ c }}</button>
+            <!-- Filter mata uang: baris sendiri di bawah, rata tengah saat mobile -->
+            <div class="flex w-full justify-center sm:w-auto sm:justify-start">
+              <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
+                <button
+                  v-for="c in CURRENCIES"
+                  :key="c"
+                  class="rounded px-3 py-1 text-xs font-semibold transition-colors"
+                  :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
+                  @click="currency = c"
+                >{{ c }}</button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -224,15 +256,6 @@ const dayTone = (total: number) =>
             <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
             <span class="min-w-[130px] text-center text-sm font-semibold sm:min-w-[160px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
             <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
-          </div>
-          <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
-            <button
-              v-for="c in CURRENCIES"
-              :key="c"
-              class="rounded px-3 py-1 text-xs font-semibold transition-colors"
-              :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
-              @click="currency = c"
-            >{{ c }}</button>
           </div>
         </div>
 

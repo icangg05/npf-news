@@ -137,15 +137,15 @@ function onSubmit() {
             </div>
             <div class="w-24">
               <Label class="mb-1.5 block text-xs">Actual</Label>
-              <Input v-model="n.actual" type="number" inputmode="numeric" />
+              <Input v-model="n.actual" type="number" inputmode="numeric" placeholder="150" />
             </div>
             <div class="w-24">
               <Label class="mb-1.5 block text-xs">Cons</Label>
-              <Input v-model="n.consensus" type="number" inputmode="numeric" />
+              <Input v-model="n.consensus" type="number" inputmode="numeric" placeholder="120" />
             </div>
             <div class="w-24">
               <Label class="mb-1.5 block text-xs">Prev</Label>
-              <Input v-model="n.previous" type="number" inputmode="numeric" />
+              <Input v-model="n.previous" type="number" inputmode="numeric" placeholder="110" />
             </div>
             <div class="w-20">
               <Label class="mb-1.5 block text-xs">Satuan</Label>

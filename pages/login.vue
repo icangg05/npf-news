@@ -38,16 +38,16 @@ const features = [
 </script>
 
 <template>
-  <div class="flex min-h-[100dvh] w-full flex-col px-4 py-5 sm:items-center sm:justify-center sm:py-8">
-    <div class="mx-auto w-full max-w-4xl">
-      <!-- Link kembali ke home/riwayat -->
-      <NuxtLink
-        to="/"
-        class="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft class="h-4 w-4" /> Kembali ke Riwayat
-      </NuxtLink>
+  <div class="relative flex min-h-[100dvh] w-full flex-col justify-center px-4 py-16 sm:items-center sm:py-8">
+    <!-- Link kembali ke home/riwayat: mengambang di pojok agar kartu tetap di tengah -->
+    <NuxtLink
+      to="/"
+      class="absolute left-4 top-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:left-6 sm:top-6"
+    >
+      <ArrowLeft class="h-4 w-4" /> Kembali ke Riwayat
+    </NuxtLink>
 
+    <div class="mx-auto w-full max-w-4xl">
       <Card class="overflow-hidden shadow-sm">
         <div class="grid md:grid-cols-2">
           <!-- Panel brand -->

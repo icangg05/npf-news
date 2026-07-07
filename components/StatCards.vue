@@ -36,47 +36,76 @@ const stats = computed(() => {
 })
 
 const cards = computed(() => [
-  { label: 'Total sesi', value: formatThousands(stats.value.total), icon: CalendarClock, tone: 'text-foreground' },
-  { label: 'Total berita', value: formatThousands(stats.value.totalNews), icon: Newspaper, tone: 'text-foreground' },
+  {
+    label: 'Total sesi',
+    value: formatThousands(stats.value.total),
+    icon: CalendarClock,
+    tone: 'text-foreground',
+    hint: 'Jumlah sesi rilis NFP yang tercatat sesuai filter yang sedang aktif.',
+  },
+  {
+    label: 'Total berita',
+    value: formatThousands(stats.value.totalNews),
+    icon: Newspaper,
+    tone: 'text-foreground',
+    hint: 'Total item berita/event ekonomi dari seluruh sesi yang ditampilkan.',
+  },
   {
     label: 'Rata-rata pips minor',
     value: formatThousands(stats.value.avgMinor),
     icon: Waves,
     tone: 'text-sky-600 dark:text-sky-400',
+    hint: 'Rata-rata pergerakan pips minor emas (XAU/USD) — reaksi awal saat rilis.',
   },
   {
     label: 'Rata-rata pips major',
     value: formatThousands(stats.value.avgMajor),
     icon: Activity,
     tone: 'text-indigo-600 dark:text-indigo-400',
+    hint: 'Rata-rata pergerakan pips major emas (XAU/USD) — reaksi lanjutan yang dominan.',
   },
   {
     label: 'Akurasi arah prediksi',
     value: stats.value.accuracy != null ? `${stats.value.accuracy}%` : '—',
     icon: Gauge,
     tone: 'text-emerald-600 dark:text-emerald-400',
+    hint: 'Persentase rilis yang arah aktualnya (naik/turun dari data sebelumnya) sesuai dengan konsensus.',
   },
   {
     label: 'Spike / Satu arah',
     value: `${stats.value.spikes} / ${stats.value.oneWay}`,
     icon: Zap,
     tone: 'text-amber-600 dark:text-amber-400',
+    hint: 'Jumlah sesi dengan spike (naik-turun tajam) dibanding yang bergerak satu arah saja.',
   },
 ])
 </script>
 
 <template>
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-    <Card v-for="c in cards" :key="c.label" class="hover-lift">
-      <CardContent class="p-4">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-medium text-muted-foreground">{{ c.label }}</span>
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+    <HoverCard v-for="c in cards" :key="c.label">
+      <HoverCardTrigger>
+        <Card class="hover-lift cursor-help">
+          <CardContent class="p-4">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-medium text-muted-foreground">{{ c.label }}</span>
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <component :is="c.icon" class="h-4 w-4" />
+              </span>
+            </div>
+            <div class="mt-2 font-display text-2xl font-bold tracking-tight" :class="c.tone">{{ c.value }}</div>
+          </CardContent>
+        </Card>
+      </HoverCardTrigger>
+      <HoverCardContent class="w-64">
+        <div class="flex items-center gap-2">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
             <component :is="c.icon" class="h-4 w-4" />
           </span>
+          <span class="text-sm font-semibold">{{ c.label }}</span>
         </div>
-        <div class="mt-2 font-display text-2xl font-bold tracking-tight" :class="c.tone">{{ c.value }}</div>
-      </CardContent>
-    </Card>
+        <p class="mt-2 text-xs leading-relaxed text-muted-foreground">{{ c.hint }}</p>
+      </HoverCardContent>
+    </HoverCard>
   </div>
 </template>

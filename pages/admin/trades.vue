@@ -129,24 +129,25 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
             </div>
           </div>
           <div class="flex shrink-0 flex-col items-end gap-1">
-            <span class="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{{ t.currency }}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{{ t.currency }}</span>
+              <!-- Hapus: sebaris dengan badge agar tidak menambah tinggi kartu -->
+              <span
+                role="button"
+                tabindex="0"
+                class="-mr-1 flex h-6 w-6 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
+                aria-label="Hapus"
+                @click.stop="toDelete = t"
+                @keydown.enter.stop="toDelete = t"
+              >
+                <Trash2 class="h-3.5 w-3.5" />
+              </span>
+            </div>
             <span class="flex items-center gap-1 text-[11px] text-muted-foreground"><Hash class="h-3 w-3" />{{ t.trade_count ?? 1 }} trade</span>
           </div>
         </div>
         <div v-if="stripHtml(t.note)" class="mt-2 border-t pt-2">
           <span class="line-clamp-2 text-[11px] text-muted-foreground">{{ stripHtml(t.note) }}</span>
-        </div>
-        <div class="mt-2 flex justify-end">
-          <span
-            role="button"
-            tabindex="0"
-            class="flex h-7 w-7 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
-            aria-label="Hapus"
-            @click.stop="toDelete = t"
-            @keydown.enter.stop="toDelete = t"
-          >
-            <Trash2 class="h-4 w-4" />
-          </span>
         </div>
       </button>
       <Card v-if="!trades.length">

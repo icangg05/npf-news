@@ -50,7 +50,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'AuPulse — NFP × Emas',
+      title: 'AuPulse',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'description', content: 'AuPulse — pantau denyut emas (XAU/USD) terhadap rilis Non-Farm Payrolls.' },
@@ -60,9 +60,8 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-title', content: 'AuPulse' },
       ],
       link: [
-        { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
         { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
-        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'apple-touch-icon', href: '/icon.svg' },
       ],
     },
   },
@@ -83,10 +82,8 @@ export default defineNuxtConfig({
       scope: '/',
       categories: ['finance', 'business'],
       icons: [
-        { src: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
-        { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-        { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-        { src: '/favicon.ico', sizes: 'any', type: 'image/x-icon', purpose: 'maskable' },
+        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
       ],
     },
     workbox: {

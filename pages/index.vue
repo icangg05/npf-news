@@ -38,10 +38,12 @@ const filtered = computed(() => {
     </PageHero>
 
     <Tabs default-value="statistik" class="space-y-5">
-      <TabsList>
-        <TabsTrigger value="statistik"><BarChart3 class="h-4 w-4" /> Statistik</TabsTrigger>
-        <TabsTrigger value="berita"><Newspaper class="h-4 w-4" /> Berita</TabsTrigger>
-      </TabsList>
+      <div class="flex justify-center">
+        <TabsList>
+          <TabsTrigger value="statistik"><BarChart3 class="h-4 w-4" /> Statistik</TabsTrigger>
+          <TabsTrigger value="berita"><Newspaper class="h-4 w-4" /> Berita</TabsTrigger>
+        </TabsList>
+      </div>
 
       <!-- TAB 1: Kartu statistik -->
       <TabsContent value="statistik">

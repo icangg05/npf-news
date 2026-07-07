@@ -6,6 +6,8 @@ const colorMode = useColorMode()
 
 // Halaman login tampil fullscreen tanpa header & tab bar.
 const isAuthPage = computed(() => route.path === '/login')
+
+const year = new Date().getFullYear()
 </script>
 
 <template>
@@ -46,7 +48,10 @@ const isAuthPage = computed(() => route.path === '/login')
 
     <template v-if="!isAuthPage">
       <footer class="border-t py-6 pb-24 text-center text-xs text-muted-foreground sm:pb-6">
-        Riwayat NFP vs Emas · Developer by Ilmi Faizan
+        <p>© {{ year }} AuPulse · Analitik Riwayat NFP × Emas (XAU/USD)</p>
+        <p class="mt-1 text-[11px]">
+          Dikembangkan oleh <span class="font-medium text-foreground">Ilmi Faizan</span>
+        </p>
       </footer>
 
       <!-- Tab bar navigasi (mobile) -->
