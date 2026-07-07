@@ -78,7 +78,7 @@ const majorTone = computed(() => {
           <span class="text-muted-foreground">Pips major: </span>
           <span class="text-sm font-bold" :class="majorTone">{{ formatNumber(s.major_pips) }}</span>
         </div>
-        <p v-if="s.note" class="basis-full text-[11px] italic text-muted-foreground sm:basis-auto">“{{ s.note }}”</p>
+        <div v-if="s.note" class="rte-content basis-full text-[11px] text-muted-foreground sm:basis-auto" v-html="s.note" />
       </div>
     </CardContent>
   </Card>

@@ -242,7 +242,7 @@ function onSubmit() {
         </div>
         <div class="sm:col-span-4">
           <Label class="mb-1.5 block">Catatan</Label>
-          <Textarea v-model="note" placeholder="Konteks pergerakan setelah news…" />
+          <RichTextEditor v-model="note" placeholder="Konteks pergerakan setelah news…" />
         </div>
       </CardContent>
     </Card>

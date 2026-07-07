@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import type { Trade, Currency, ExchangeRate } from '~/types/trade'
 import { CURRENCIES } from '~/types/trade'
-import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X, LayoutDashboard, CalendarRange } from 'lucide-vue-next'
+
+interface DayCell {
+  date: string
+  day: number
+  inMonth: boolean
+  isToday: boolean
+  items: Trade[]
+  total: number
+}
 
 const user = useSupabaseUser()
 const { listRange } = useTrades()
@@ -87,6 +96,18 @@ function resetRange() {
   from.value = firstOf(now.getFullYear(), now.getMonth())
   to.value = lastOf(now.getFullYear(), now.getMonth())
 }
+
+// ---- modal detail hari (klik tanggal di kalender) ----
+const selectedDay = ref<DayCell | null>(null)
+const dayOpen = computed({
+  get: () => !!selectedDay.value,
+  set: (v: boolean) => { if (!v) selectedDay.value = null },
+})
+function onSelectDay(cell: DayCell) {
+  selectedDay.value = cell
+}
+const dayTone = (total: number) =>
+  total > 0 ? 'text-emerald-600 dark:text-emerald-400' : total < 0 ? 'text-destructive' : 'text-muted-foreground'
 </script>
 
 <template>
@@ -99,95 +120,146 @@ function resetRange() {
       <template #title>Kalender <span class="text-gold">Profit</span></template>
     </PageHero>
 
-    <!-- Kontrol + filter (di atas, memengaruhi semua kartu) -->
-    <Card>
-      <CardContent class="flex flex-wrap items-end gap-3 p-4">
-        <!-- navigasi bulan -->
-        <div class="flex items-center gap-1 rounded-md border bg-card p-1">
-          <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
-          <span class="min-w-[120px] text-center text-sm font-semibold sm:min-w-[140px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
-          <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
+    <Tabs default-value="ringkasan" class="space-y-5">
+      <TabsList>
+        <TabsTrigger value="ringkasan"><LayoutDashboard class="h-4 w-4" /> Ringkasan</TabsTrigger>
+        <TabsTrigger value="kalender"><CalendarRange class="h-4 w-4" /> Kalender</TabsTrigger>
+      </TabsList>
+
+      <!-- ===== TAB 1: Ringkasan (kontrol + statistik + kalender) ===== -->
+      <TabsContent value="ringkasan" class="space-y-5">
+        <!-- Kontrol + filter -->
+        <Card>
+          <CardContent class="flex flex-wrap items-end gap-3 p-4">
+            <div class="flex items-center gap-1 rounded-md border bg-card p-1">
+              <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
+              <span class="min-w-[120px] text-center text-sm font-semibold sm:min-w-[140px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
+              <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
+            </div>
+
+            <div>
+              <Label class="mb-1.5 block text-xs text-muted-foreground">Dari</Label>
+              <Input v-model="from" type="date" class="w-36" />
+            </div>
+            <div>
+              <Label class="mb-1.5 block text-xs text-muted-foreground">Sampai</Label>
+              <Input v-model="to" type="date" class="w-36" />
+            </div>
+            <Button variant="ghost" size="sm" @click="resetRange">
+              <X class="h-4 w-4" /> Reset
+            </Button>
+
+            <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
+              <button
+                v-for="c in CURRENCIES"
+                :key="c"
+                class="rounded px-3 py-1 text-xs font-semibold transition-colors"
+                :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
+                @click="currency = c"
+              >{{ c }}</button>
+            </div>
+
+            <div class="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+              <span class="hidden rounded-md border bg-card px-2.5 py-1.5 sm:inline">
+                1 USD = <span class="font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
+              </span>
+              <Button v-if="user" variant="gold" size="sm" :disabled="updatingRate" @click="onUpdateRate">
+                <RefreshCw class="h-4 w-4" :class="updatingRate && 'animate-spin'" /> Update kurs
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Ringkasan (kartu profit & loss digabung agar ringkas) -->
+        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Card class="hover-lift">
+            <CardContent class="p-4">
+              <div class="text-xs font-medium text-muted-foreground">Total periode</div>
+              <div class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="dayTone(rangeTotal)">
+                {{ formatCurrency(rangeTotal, currency) }}
+              </div>
+            </CardContent>
+          </Card>
+          <Card class="hover-lift">
+            <CardContent class="p-4">
+              <div class="text-xs font-medium text-muted-foreground">Winrate</div>
+              <div class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="winrate != null && winrate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : winrate != null ? 'text-destructive' : ''">
+                {{ winrate != null ? `${winrate}%` : '—' }}
+              </div>
+            </CardContent>
+          </Card>
+          <Card class="hover-lift">
+            <CardContent class="p-4">
+              <div class="text-xs font-medium text-muted-foreground">Profit / Loss</div>
+              <div class="mt-1 flex items-center gap-3 font-display text-xl font-bold sm:text-2xl">
+                <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><TrendingUp class="h-4 w-4" /> {{ wins }}</span>
+                <span class="text-border">/</span>
+                <span class="flex items-center gap-1 text-destructive"><TrendingDown class="h-4 w-4" /> {{ loss }}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card class="hover-lift">
+            <CardContent class="p-4">
+              <div class="text-xs font-medium text-muted-foreground">Jumlah trade</div>
+              <div class="mt-1 font-display text-xl font-bold sm:text-2xl">{{ rangeTrades.length }}</div>
+            </CardContent>
+          </Card>
         </div>
 
-        <!-- filter periode kustom -->
-        <div>
-          <Label class="mb-1.5 block text-xs text-muted-foreground">Dari</Label>
-          <Input v-model="from" type="date" class="w-36" />
-        </div>
-        <div>
-          <Label class="mb-1.5 block text-xs text-muted-foreground">Sampai</Label>
-          <Input v-model="to" type="date" class="w-36" />
-        </div>
-        <Button variant="ghost" size="sm" @click="resetRange">
-          <X class="h-4 w-4" /> Reset
-        </Button>
+        <!-- Kalender -->
+        <CalendarView :year="viewYear" :month="viewMonth" :trades="trades ?? []" :currency="currency" :usd-idr="usdIdr" @select="onSelectDay" />
+      </TabsContent>
 
-        <!-- mata uang -->
-        <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
-          <button
-            v-for="c in CURRENCIES"
-            :key="c"
-            class="rounded px-3 py-1 text-xs font-semibold transition-colors"
-            :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
-            @click="currency = c"
-          >{{ c }}</button>
-        </div>
-
-        <!-- kurs + update -->
-        <div class="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-          <span class="hidden rounded-md border bg-card px-2.5 py-1.5 sm:inline">
-            1 USD = <span class="font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
-          </span>
-          <Button v-if="user" variant="gold" size="sm" :disabled="updatingRate" @click="onUpdateRate">
-            <RefreshCw class="h-4 w-4" :class="updatingRate && 'animate-spin'" /> Update kurs
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-
-    <!-- Ringkasan (mengikuti filter) -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      <Card class="hover-lift">
-        <CardContent class="p-4">
-          <div class="text-xs font-medium text-muted-foreground">Total periode</div>
-          <div class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="rangeTotal > 0 ? 'text-emerald-600 dark:text-emerald-400' : rangeTotal < 0 ? 'text-destructive' : ''">
-            {{ formatCurrency(rangeTotal, currency) }}
+      <!-- ===== TAB 2: Kalender saja (fokus, tampilan lega) ===== -->
+      <TabsContent value="kalender" class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-1 rounded-md border bg-card p-1">
+            <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
+            <span class="min-w-[130px] text-center text-sm font-semibold sm:min-w-[160px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
+            <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
           </div>
-        </CardContent>
-      </Card>
-      <Card class="hover-lift">
-        <CardContent class="p-4">
-          <div class="text-xs font-medium text-muted-foreground">Winrate</div>
-          <div class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="winrate != null && winrate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : winrate != null ? 'text-destructive' : ''">
-            {{ winrate != null ? `${winrate}%` : '—' }}
+          <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
+            <button
+              v-for="c in CURRENCIES"
+              :key="c"
+              class="rounded px-3 py-1 text-xs font-semibold transition-colors"
+              :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
+              @click="currency = c"
+            >{{ c }}</button>
           </div>
-        </CardContent>
-      </Card>
-      <Card class="hover-lift">
-        <CardContent class="p-4">
-          <div class="text-xs font-medium text-muted-foreground">Hari profit</div>
-          <div class="mt-1 flex items-center gap-1.5 font-display text-xl font-bold text-emerald-600 dark:text-emerald-400 sm:text-2xl">
-            <TrendingUp class="h-4 w-4" /> {{ wins }}
-          </div>
-        </CardContent>
-      </Card>
-      <Card class="hover-lift">
-        <CardContent class="p-4">
-          <div class="text-xs font-medium text-muted-foreground">Hari loss</div>
-          <div class="mt-1 flex items-center gap-1.5 font-display text-xl font-bold text-destructive sm:text-2xl">
-            <TrendingDown class="h-4 w-4" /> {{ loss }}
-          </div>
-        </CardContent>
-      </Card>
-      <Card class="hover-lift">
-        <CardContent class="p-4">
-          <div class="text-xs font-medium text-muted-foreground">Jumlah trade</div>
-          <div class="mt-1 font-display text-xl font-bold sm:text-2xl">{{ rangeTrades.length }}</div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
 
-    <!-- Kalender -->
-    <CalendarView :year="viewYear" :month="viewMonth" :trades="trades ?? []" :currency="currency" :usd-idr="usdIdr" />
+        <CalendarView size="lg" :year="viewYear" :month="viewMonth" :trades="trades ?? []" :currency="currency" :usd-idr="usdIdr" @select="onSelectDay" />
+      </TabsContent>
+    </Tabs>
+
+    <!-- ===== Modal detail hari (fullscreen) ===== -->
+    <Dialog v-model:open="dayOpen">
+      <DialogContent v-if="selectedDay" fullscreen>
+        <div class="mx-auto w-full max-w-2xl">
+          <DialogHeader>
+            <div class="flex items-center justify-between gap-3 pr-8">
+              <DialogTitle>{{ formatDateStr(selectedDay.date) }}</DialogTitle>
+              <span class="font-display text-xl font-bold" :class="dayTone(selectedDay.total)">
+                {{ formatCurrency(selectedDay.total, currency) }}
+              </span>
+            </div>
+            <DialogDescription>{{ selectedDay.items.length }} trade pada hari ini.</DialogDescription>
+          </DialogHeader>
+
+          <ul class="mt-4 space-y-3">
+            <li v-for="t in selectedDay.items" :key="t.id" class="glass-card p-3">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-display text-lg font-bold" :class="t.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'">
+                  {{ formatCurrency(t.amount, t.currency) }}
+                </span>
+                <span class="rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{{ t.currency }}</span>
+              </div>
+              <div v-if="t.note" class="rte-content mt-2 border-t pt-2 text-sm" v-html="t.note" />
+            </li>
+          </ul>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

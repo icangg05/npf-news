@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toast'
     <!-- Indikator loading pindah halaman (aksen emas -> cyan) -->
     <NuxtLoadingIndicator
       color="linear-gradient(to right, hsl(43 96% 56%), hsl(187 92% 56%))"
-      :height="3"
+      :height="2"
     />
 
     <!-- Ornamen latar dekoratif -->

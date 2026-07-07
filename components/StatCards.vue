@@ -19,10 +19,18 @@ const stats = computed(() => {
   const spikes = list.filter((s) => s.spike === 'up' || s.spike === 'down').length
   const oneWay = list.filter((s) => s.spike === 'one_way').length
 
-  // kesesuaian: % berita yang aktualnya memenuhi/melebihi consensus (miss = tidak sesuai)
-  const withBoth = news.filter((n) => n.actual != null && n.consensus != null)
-  const met = withBoth.filter((n) => (n.actual as number) >= (n.consensus as number)).length
-  const accuracy = withBoth.length ? Math.round((met / withBoth.length) * 100) : null
+  // kesesuaian arah: prediksi = arah consensus terhadap previous (naik/turun).
+  // benar bila actual benar-benar bergerak ke arah yang sama dari previous.
+  // contoh: prev 150, cons 110 (prediksi turun), actual 90 -> turun -> benar.
+  const predicted = news.filter(
+    (n) => n.actual != null && n.consensus != null && n.previous != null && n.consensus !== n.previous,
+  )
+  const correct = predicted.filter((n) => {
+    const predUp = (n.consensus as number) > (n.previous as number)
+    const actUp = (n.actual as number) > (n.previous as number)
+    return (n.actual as number) !== (n.previous as number) && predUp === actUp
+  }).length
+  const accuracy = predicted.length ? Math.round((correct / predicted.length) * 100) : null
 
   return { total: list.length, totalNews: news.length, avgMinor, avgMajor, spikes, oneWay, accuracy }
 })
@@ -43,7 +51,7 @@ const cards = computed(() => [
     tone: 'text-indigo-600 dark:text-indigo-400',
   },
   {
-    label: 'Kesesuaian cons vs act',
+    label: 'Akurasi arah prediksi',
     value: stats.value.accuracy != null ? `${stats.value.accuracy}%` : '—',
     icon: Gauge,
     tone: 'text-emerald-600 dark:text-emerald-400',

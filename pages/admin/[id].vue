@@ -45,7 +45,7 @@ async function onSubmit(payload: { session: NfpSessionInput; news: NfpNewsInput[
     <PageHero :icon="Layers" eyebrow="Form sesi">
       <template #title>{{ isNew ? 'Tambah' : 'Edit' }} <span class="text-gold">Sesi</span> NFP</template>
       <template #actions>
-        <Button variant="outline" class="border-white/30 bg-white/10 text-primary-foreground hover:bg-white/20" as-child>
+        <Button variant="outline" as-child>
           <NuxtLink to="/admin"><ArrowLeft class="h-4 w-4" /> Kembali</NuxtLink>
         </Button>
       </template>
