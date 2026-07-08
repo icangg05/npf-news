@@ -8,7 +8,7 @@ const { list, remove } = useNfpSessions()
 const router = useRouter()
 const toast = useToast()
 
-const { data: sessions, pending, refresh } = await useAsyncData<NfpSession[]>(
+const { data: sessions, pending, refresh } = await useCachedData<NfpSession[]>(
   'admin-nfp-sessions',
   () => list(),
   { default: () => [] },

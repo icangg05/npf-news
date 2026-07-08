@@ -8,7 +8,7 @@ definePageMeta({ middleware: 'auth' })
 const { listAll, create, update, remove } = useTrades()
 const toast = useToast()
 
-const { data: trades, refresh } = await useAsyncData<Trade[]>('admin-trades', () => listAll(), { default: () => [] })
+const { data: trades, refresh } = await useCachedData<Trade[]>('admin-trades', () => listAll(), { default: () => [] })
 
 // ---- form (di dalam modal) ----
 const formOpen = ref(false)

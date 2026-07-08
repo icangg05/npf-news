@@ -30,7 +30,7 @@ const viewYear = computed(() => Number(from.value.split('-')[0]) || now.getFullY
 const viewMonth = computed(() => (Number(from.value.split('-')[1]) || now.getMonth() + 1) - 1)
 
 // ---- kurs ----
-const { data: rate } = await useAsyncData<ExchangeRate | null>('exchange-rate', () => getRate(), { default: () => null })
+const { data: rate } = await useCachedData<ExchangeRate | null>('exchange-rate', () => getRate(), { default: () => null })
 const usdIdr = computed(() => rate.value?.usd_idr ?? 16000)
 
 const toast = useToast()
@@ -64,7 +64,7 @@ const fetchRange = computed(() => {
   return { start: starts[0], end: ends[ends.length - 1] }
 })
 
-const { data: trades } = await useAsyncData<Trade[]>(
+const { data: trades } = await useCachedData<Trade[]>(
   'calendar-trades',
   () => listRange(fetchRange.value.start, fetchRange.value.end),
   { default: () => [], watch: [fetchRange] },
@@ -151,11 +151,23 @@ const dayTone = (total: number) =>
           <TabsTrigger value="kalender"><CalendarRange class="h-4 w-4" /> Kalender</TabsTrigger>
         </TabsList>
 
-        <!-- Kurs saat ini + tombol update kurs: rapat ke kanan (desktop) -->
+        <!-- Format uang + kurs saat ini + tombol update kurs: rapat ke kanan (desktop) -->
         <div class="flex items-center gap-2 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
           <span class="hidden items-center rounded-md border bg-card px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-flex">
             1&nbsp;USD&nbsp;= <span class="ml-1 font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
           </span>
+
+          <!-- Format uang: di samping kiri tombol update kurs -->
+          <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
+            <button
+              v-for="c in CURRENCIES"
+              :key="c"
+              class="rounded px-3 py-1 text-xs font-semibold transition-colors"
+              :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
+              @click="currency = c"
+            >{{ c }}</button>
+          </div>
+
           <Button
             v-if="user"
             variant="gold"
@@ -168,22 +180,20 @@ const dayTone = (total: number) =>
         </div>
       </div>
 
+      <!-- Filter bulan: dipakai kedua tab, jadi disimpan di luar tab (shared) -->
+      <div class="flex items-center justify-center gap-2">
+        <div class="flex items-center gap-1 rounded-md border bg-card p-1">
+          <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
+          <span class="min-w-[130px] text-center text-sm font-semibold sm:min-w-[160px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
+          <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
+        </div>
+      </div>
+
       <!-- ===== TAB 1: Ringkasan (kontrol + statistik + kalender) ===== -->
       <TabsContent value="ringkasan" class="space-y-5">
         <!-- Kontrol + filter -->
         <Card>
           <CardContent class="flex flex-wrap items-end gap-3 p-4">
-            <div class="flex items-center gap-1 rounded-md border bg-card p-1">
-              <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
-              <span class="min-w-[120px] text-center text-sm font-semibold sm:min-w-[140px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
-              <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
-            </div>
-
-            <!-- Reset: tepat di samping kanan pengubah bulan -->
-            <Button variant="ghost" size="sm" @click="resetRange">
-              <X class="h-4 w-4" /> Reset
-            </Button>
-
             <div>
               <Label class="mb-1.5 block text-xs text-muted-foreground">Dari</Label>
               <Input v-model="from" type="date" class="w-36" />
@@ -193,18 +203,10 @@ const dayTone = (total: number) =>
               <Input v-model="to" type="date" class="w-36" />
             </div>
 
-            <!-- Filter mata uang: baris sendiri di bawah, rata tengah saat mobile -->
-            <div class="flex w-full justify-center sm:w-auto sm:justify-start">
-              <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
-                <button
-                  v-for="c in CURRENCIES"
-                  :key="c"
-                  class="rounded px-3 py-1 text-xs font-semibold transition-colors"
-                  :class="currency === c ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
-                  @click="currency = c"
-                >{{ c }}</button>
-              </div>
-            </div>
+            <!-- Reset rentang tanggal -->
+            <Button variant="ghost" size="sm" @click="resetRange">
+              <X class="h-4 w-4" /> Reset
+            </Button>
           </CardContent>
         </Card>
 
@@ -251,14 +253,6 @@ const dayTone = (total: number) =>
 
       <!-- ===== TAB 2: Kalender saja (fokus, tampilan lega) ===== -->
       <TabsContent value="kalender" class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-1 rounded-md border bg-card p-1">
-            <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(-1)"><ChevronLeft class="h-4 w-4" /></Button>
-            <span class="min-w-[130px] text-center text-sm font-semibold sm:min-w-[160px]">{{ monthNameFull(viewMonth) }} {{ viewYear }}</span>
-            <Button variant="ghost" size="icon" class="h-8 w-8" @click="shiftMonth(1)"><ChevronRight class="h-4 w-4" /></Button>
-          </div>
-        </div>
-
         <CalendarView size="lg" :year="viewYear" :month="viewMonth" :trades="trades ?? []" :currency="currency" :usd-idr="usdIdr" @select="onSelectDay" />
       </TabsContent>
     </Tabs>

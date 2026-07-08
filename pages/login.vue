@@ -12,7 +12,7 @@ const showPass = ref(false)
 const loading = ref(false)
 
 watchEffect(() => {
-  if (user.value) router.push('/admin')
+  if (user.value) router.push('/admin/trades')
 })
 
 async function submit() {
@@ -27,7 +27,7 @@ async function submit() {
     return
   }
   toast.success('Berhasil masuk.')
-  await router.push('/admin')
+  await router.push('/admin/trades')
 }
 
 const features = [

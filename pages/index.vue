@@ -4,7 +4,7 @@ import { Sparkles, BarChart3, Newspaper } from 'lucide-vue-next'
 
 const { list } = useNfpSessions()
 
-const { data: sessions, pending, error } = await useAsyncData<NfpSession[]>(
+const { data: sessions, pending, error } = await useCachedData<NfpSession[]>(
   'nfp-sessions',
   () => list(),
   { default: () => [] },
