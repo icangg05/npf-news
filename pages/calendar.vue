@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { Trade, Currency, ExchangeRate } from '~/types/trade'
+import type { Trade, TradeRules, ImportantNote, Currency, ExchangeRate } from '~/types/trade'
 import { CURRENCIES } from '~/types/trade'
-import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X, LayoutDashboard, CalendarRange } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X, LayoutDashboard, CalendarRange, LineChart, StickyNote, Pencil, Check, Loader2 } from 'lucide-vue-next'
+
+definePageMeta({ middleware: 'auth' })
 
 interface DayCell {
   date: string
@@ -13,8 +15,10 @@ interface DayCell {
 }
 
 const user = useSupabaseUser()
-const { listRange } = useTrades()
+const { listRange, listAll } = useTrades()
 const { getRate, updateRate } = useRates()
+const { getRules } = useRules()
+const { getNote, saveNote } = useNotes()
 
 const now = new Date()
 const firstOf = (y: number, m: number) => toDateStr(new Date(y, m, 1))
@@ -69,6 +73,33 @@ const { data: trades } = await useCachedData<Trade[]>(
   () => listRange(fetchRange.value.start, fetchRange.value.end),
   { default: () => [], watch: [fetchRange] },
 )
+
+// ---- data grafik ekuitas (semua trade + modal awal dari aturan) ----
+const { data: allTrades } = await useCachedData<Trade[]>('equity-trades', () => listAll(), { default: () => [] })
+const { data: rules } = await useCachedData<TradeRules | null>('trade-rules', () => getRules(), { default: () => null })
+const modalAwal = computed(() => convert(rules.value?.modal_awal ?? 0, rules.value?.base_currency ?? 'USC', currency.value, usdIdr.value))
+
+// ---- catatan penting (rich text) ----
+const { data: note } = await useCachedData<ImportantNote | null>('important-note', () => getNote(), { default: () => null })
+const noteEditing = ref(false)
+const noteDraft = ref('')
+const noteSaving = ref(false)
+function startEditNote() {
+  noteDraft.value = note.value?.body ?? ''
+  noteEditing.value = true
+}
+async function saveNoteBody() {
+  noteSaving.value = true
+  try {
+    note.value = await saveNote(noteDraft.value)
+    noteEditing.value = false
+    toast.success('Catatan tersimpan.')
+  } catch (e: any) {
+    toast.error(e?.message ?? 'Gagal menyimpan catatan.')
+  } finally {
+    noteSaving.value = false
+  }
+}
 
 function sumConverted(items: Trade[]): number {
   return items.reduce((a, t) => a + convert(t.amount, t.currency, currency.value, usdIdr.value), 0)
@@ -145,19 +176,20 @@ const dayTone = (total: number) =>
     </PageHero>
 
     <Tabs default-value="ringkasan" class="space-y-5">
-      <div class="relative flex flex-col items-center justify-center gap-3 sm:flex-row">
+      <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
         <TabsList>
           <TabsTrigger value="ringkasan"><LayoutDashboard class="h-4 w-4" /> Ringkasan</TabsTrigger>
           <TabsTrigger value="kalender"><CalendarRange class="h-4 w-4" /> Kalender</TabsTrigger>
+          <TabsTrigger value="grafik"><LineChart class="h-4 w-4" /> Grafik</TabsTrigger>
         </TabsList>
 
-        <!-- Format uang + kurs saat ini + tombol update kurs: rapat ke kanan (desktop) -->
-        <div class="flex items-center gap-2 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
-          <span class="hidden items-center rounded-md border bg-card px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+        <!-- Kurs saat ini + format uang + tombol update kurs -->
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <span class="hidden items-center rounded-md border bg-card px-2.5 py-1.5 text-xs text-muted-foreground lg:inline-flex">
             1&nbsp;USD&nbsp;= <span class="ml-1 font-semibold text-foreground">Rp{{ new Intl.NumberFormat('id-ID').format(usdIdr) }}</span>
           </span>
 
-          <!-- Format uang: di samping kiri tombol update kurs -->
+          <!-- Format uang -->
           <div class="flex items-center gap-0.5 rounded-md border bg-card p-1">
             <button
               v-for="c in CURRENCIES"
@@ -172,7 +204,7 @@ const dayTone = (total: number) =>
             v-if="user"
             variant="gold"
             :disabled="updatingRate"
-            class="h-7 gap-1.5 rounded-full px-3 text-xs [&_svg]:size-3.5"
+            class="h-8 gap-1.5 rounded-md px-3 text-xs [&_svg]:size-3.5"
             @click="onUpdateRate"
           >
             <RefreshCw :class="updatingRate && 'animate-spin'" /> Update kurs
@@ -249,11 +281,53 @@ const dayTone = (total: number) =>
             </CardContent>
           </Card>
         </div>
+
+        <!-- Catatan penting (kesimpulan / point-point) -->
+        <Card>
+          <CardHeader class="flex flex-row items-center justify-between gap-2 space-y-0">
+            <div class="flex items-center gap-2">
+              <div class="rounded-lg bg-gold/10 p-2 text-gold"><StickyNote class="h-4 w-4" /></div>
+              <CardTitle class="text-base">Catatan Penting</CardTitle>
+            </div>
+            <Button v-if="!noteEditing" variant="ghost" size="sm" @click="startEditNote">
+              <Pencil class="h-4 w-4" /> Edit
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <template v-if="noteEditing">
+              <RichTextEditor v-model="noteDraft" placeholder="Kesimpulan / point-point penting selama trading…" />
+              <div class="mt-3 flex justify-end gap-2">
+                <Button variant="ghost" size="sm" @click="noteEditing = false"><X class="h-4 w-4" /> Batal</Button>
+                <Button size="sm" :disabled="noteSaving" @click="saveNoteBody">
+                  <Loader2 v-if="noteSaving" class="h-4 w-4 animate-spin" />
+                  <Check v-else class="h-4 w-4" />
+                  {{ noteSaving ? 'Menyimpan…' : 'Simpan' }}
+                </Button>
+              </div>
+            </template>
+            <template v-else>
+              <div v-if="stripHtml(note?.body ?? '')" class="rte-content text-sm" v-html="note?.body" />
+              <button
+                v-else
+                type="button"
+                class="w-full rounded-md border border-dashed py-6 text-center text-sm text-muted-foreground transition-colors hover:bg-accent/50"
+                @click="startEditNote"
+              >
+                Belum ada catatan. Klik untuk menulis kesimpulan penting Anda.
+              </button>
+            </template>
+          </CardContent>
+        </Card>
       </TabsContent>
 
       <!-- ===== TAB 2: Kalender saja (fokus, tampilan lega) ===== -->
       <TabsContent value="kalender" class="space-y-4">
         <CalendarView size="lg" :year="viewYear" :month="viewMonth" :trades="trades ?? []" :currency="currency" :usd-idr="usdIdr" @select="onSelectDay" />
+      </TabsContent>
+
+      <!-- ===== TAB 3: Grafik perjalanan trade (kurva ekuitas) ===== -->
+      <TabsContent value="grafik" class="space-y-4">
+        <EquityCurve :trades="allTrades ?? []" :modal-awal="modalAwal" :currency="currency" :usd-idr="usdIdr" />
       </TabsContent>
     </Tabs>
 

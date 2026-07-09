@@ -38,12 +38,12 @@ export default defineNuxtConfig({
     componentDir: '~/components/ui',
   },
 
-  // Auth: only /admin/** is protected. Public pages stay open.
+  // Auth: area trader/admin diproteksi. Halaman Riwayat (/) tetap publik.
   supabase: {
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
-      include: ['/admin(/*)?'],
+      include: ['/admin(/*)?', '/calendar', '/rules', '/profile'],
       exclude: ['/', '/login'],
     },
   },

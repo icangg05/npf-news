@@ -2,7 +2,7 @@
 import type { NfpSession } from '~/types/nfp'
 import { Plus, Layers } from 'lucide-vue-next'
 
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: ['auth', 'admin'] })
 
 const { list, remove } = useNfpSessions()
 const router = useRouter()

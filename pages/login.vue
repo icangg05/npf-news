@@ -5,14 +5,21 @@ const client = useSupabaseClient()
 const user = useSupabaseUser()
 const router = useRouter()
 const toast = useToast()
+const { load, isAdmin } = useProfile()
 
 const email = ref('')
 const password = ref('')
 const showPass = ref(false)
 const loading = ref(false)
 
+// Arahkan ke beranda sesuai peran: admin → kelola sesi, trader → kalender.
+async function goHome() {
+  await load(true)
+  await router.push(isAdmin.value ? '/admin' : '/calendar')
+}
+
 watchEffect(() => {
-  if (user.value) router.push('/admin/trades')
+  if (user.value) goHome()
 })
 
 async function submit() {
@@ -27,7 +34,7 @@ async function submit() {
     return
   }
   toast.success('Berhasil masuk.')
-  await router.push('/admin/trades')
+  await goHome()
 }
 
 const features = [

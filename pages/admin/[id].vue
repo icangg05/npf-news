@@ -2,7 +2,7 @@
 import type { NfpSession, NfpSessionInput, NfpNewsInput } from '~/types/nfp'
 import { ArrowLeft, Layers } from 'lucide-vue-next'
 
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: ['auth', 'admin'] })
 
 const route = useRoute()
 const router = useRouter()

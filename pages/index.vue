@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NfpSession, NfpFilters } from '~/types/nfp'
-import { Sparkles, BarChart3, Newspaper } from 'lucide-vue-next'
+import { Sparkles, BarChart3, History } from 'lucide-vue-next'
 
 const { list } = useNfpSessions()
 
@@ -32,7 +32,7 @@ const filtered = computed(() => {
     <PageHero
       :icon="Sparkles"
       eyebrow="XAU/USD · High impact"
-      subtitle="Dampak rilis Non-Farm Payrolls terhadap harga emas (XAU/USD), dikelompokkan per sesi rilis."
+      subtitle="Rekap historis dampak rilis Non-Farm Payrolls yang sudah lampau terhadap harga emas (XAU/USD), dikelompokkan per sesi rilis."
     >
       <template #title>Riwayat <span class="text-gold">NFP</span> vs Pergerakan Emas</template>
     </PageHero>
@@ -41,7 +41,7 @@ const filtered = computed(() => {
       <div class="flex justify-center">
         <TabsList>
           <TabsTrigger value="statistik"><BarChart3 class="h-4 w-4" /> Statistik</TabsTrigger>
-          <TabsTrigger value="berita"><Newspaper class="h-4 w-4" /> Berita</TabsTrigger>
+          <TabsTrigger value="berita"><History class="h-4 w-4" /> Riwayat Rilis</TabsTrigger>
         </TabsList>
       </div>
 
