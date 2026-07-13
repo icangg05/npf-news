@@ -79,13 +79,21 @@ const cards = computed(() => [
     hint: 'Jumlah sesi dengan spike (naik-turun tajam) dibanding yang bergerak satu arah saja.',
   },
 ])
+
+// Hover tak ada di layar sentuh: simpan kartu yang aktif agar tap juga membuka hint.
+const openIdx = ref<number | null>(null)
 </script>
 
 <template>
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-    <HoverCard v-for="c in cards" :key="c.label">
+    <HoverCard
+      v-for="(c, i) in cards"
+      :key="c.label"
+      :open="openIdx === i"
+      @update:open="(v: boolean) => { if (v) openIdx = i; else if (openIdx === i) openIdx = null }"
+    >
       <HoverCardTrigger>
-        <Card class="hover-lift cursor-help">
+        <Card class="hover-lift cursor-help" @click="openIdx = openIdx === i ? null : i">
           <CardContent class="p-4">
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs font-medium text-muted-foreground">{{ c.label }}</span>

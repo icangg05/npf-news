@@ -7,6 +7,7 @@ export interface Trade {
   amount: number
   currency: Currency
   trade_count: number // jumlah transaksi pada entri ini
+  pairs: string[] // pair yang ditradingkan (bisa lebih dari satu)
   note: string | null
   created_at: string
   updated_at: string
@@ -17,6 +18,7 @@ export interface TradeInput {
   amount: number
   currency: Currency
   trade_count: number
+  pairs: string[]
   note: string | null
 }
 
@@ -72,3 +74,6 @@ export interface ImportantNote {
 }
 
 export const CURRENCIES: Currency[] = ['USC', 'USD', 'IDR']
+
+// Pair yang bisa dipilih saat input trade (boleh lebih dari satu).
+export const PAIRS: string[] = ['XAUUSD', 'XAGUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'BTCUSD', 'ETHUSD']

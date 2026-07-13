@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Trade, Currency } from '~/types/trade'
-import { CURRENCIES } from '~/types/trade'
+import { CURRENCIES, PAIRS } from '~/types/trade'
 import { Plus, Trash2, X, Loader2, Check, Wallet, CalendarDays, ChevronRight, Hash } from 'lucide-vue-next'
 
 definePageMeta({ middleware: 'auth' })
@@ -17,8 +17,13 @@ const date = ref('')
 const amount = ref('')
 const currency = ref<Currency>('USC')
 const count = ref('1')
+const pairs = ref<string[]>([])
 const note = ref('')
 const saving = ref(false)
+
+function togglePair(p: string) {
+  pairs.value = pairs.value.includes(p) ? pairs.value.filter((x) => x !== p) : [...pairs.value, p]
+}
 
 function resetForm() {
   editingId.value = null
@@ -26,6 +31,7 @@ function resetForm() {
   amount.value = ''
   currency.value = 'USC'
   count.value = '1'
+  pairs.value = []
   note.value = ''
 }
 
@@ -41,6 +47,7 @@ function openEdit(t: Trade) {
   amount.value = String(t.amount)
   currency.value = t.currency
   count.value = String(t.trade_count ?? 1)
+  pairs.value = [...(t.pairs ?? [])]
   note.value = t.note ?? ''
   formOpen.value = true
 }
@@ -57,6 +64,7 @@ async function save() {
       amount: Number(amount.value),
       currency: currency.value,
       trade_count: Math.max(0, Math.round(Number(count.value) || 1)),
+      pairs: pairs.value,
       note: note.value || null,
     }
     if (editingId.value) await update(editingId.value, payload)
@@ -146,6 +154,9 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
             <span class="flex items-center gap-1 text-[11px] text-muted-foreground"><Hash class="h-3 w-3" />{{ t.trade_count ?? 1 }} trade</span>
           </div>
         </div>
+        <div v-if="t.pairs?.length" class="mt-1.5 flex flex-wrap gap-1">
+          <span v-for="p in t.pairs" :key="p" class="rounded bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold text-gold">{{ p }}</span>
+        </div>
         <div v-if="stripHtml(t.note)" class="mt-2 border-t pt-2">
           <span class="line-clamp-2 text-[11px] text-muted-foreground">{{ stripHtml(t.note) }}</span>
         </div>
@@ -164,6 +175,7 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
             <TableHead class="text-right">Jumlah</TableHead>
             <TableHead>Mata uang</TableHead>
             <TableHead class="text-center"># Trade</TableHead>
+            <TableHead>Pair</TableHead>
             <TableHead>Catatan</TableHead>
             <TableHead class="text-right">Aksi</TableHead>
           </TableRow>
@@ -176,6 +188,12 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
             </TableCell>
             <TableCell><span class="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold">{{ t.currency }}</span></TableCell>
             <TableCell class="text-center tabular-nums">{{ t.trade_count ?? 1 }}</TableCell>
+            <TableCell>
+              <div v-if="t.pairs?.length" class="flex flex-wrap gap-1">
+                <span v-for="p in t.pairs" :key="p" class="rounded bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold text-gold">{{ p }}</span>
+              </div>
+              <span v-else class="text-muted-foreground">—</span>
+            </TableCell>
             <TableCell class="max-w-[260px] truncate text-muted-foreground">{{ stripHtml(t.note) || '—' }}</TableCell>
             <TableCell class="whitespace-nowrap text-right">
               <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:text-destructive" aria-label="Hapus" @click.stop="toDelete = t">
@@ -184,7 +202,7 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
               <ChevronRight class="ml-1 inline h-4 w-4 text-muted-foreground/50" />
             </TableCell>
           </TableRow>
-          <TableEmpty v-if="!trades.length" :colspan="6">Belum ada trade.</TableEmpty>
+          <TableEmpty v-if="!trades.length" :colspan="7">Belum ada trade.</TableEmpty>
         </TableBody>
       </Table>
     </Card>
@@ -218,6 +236,19 @@ const amountTone = (a: number) => (a >= 0 ? 'text-emerald-600 dark:text-emerald-
           <div class="sm:col-span-6">
             <Label class="mb-1.5 block text-xs">Jumlah trade</Label>
             <Input v-model="count" type="number" inputmode="numeric" min="0" step="1" placeholder="mis. 3" />
+          </div>
+          <div class="sm:col-span-12">
+            <Label class="mb-1.5 block text-xs">Pair <span class="text-muted-foreground">(boleh lebih dari satu)</span></Label>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="p in PAIRS"
+                :key="p"
+                type="button"
+                class="rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors"
+                :class="pairs.includes(p) ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'"
+                @click="togglePair(p)"
+              >{{ p }}</button>
+            </div>
           </div>
           <div class="sm:col-span-12">
             <Label class="mb-1.5 block text-xs">Catatan / kesimpulan</Label>

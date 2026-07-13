@@ -97,11 +97,16 @@ const peak = computed(() => Math.max(...points.value.map((p) => p.balance)))
 const maxDrawdown = computed(() => {
   let peakSoFar = -Infinity
   let mdd = 0
+  let mddPct = 0 // persentase pada titik drawdown terbesar (relatif puncak saat itu)
   for (const p of points.value) {
     peakSoFar = Math.max(peakSoFar, p.balance)
-    mdd = Math.max(mdd, peakSoFar - p.balance)
+    const dd = peakSoFar - p.balance
+    if (dd > mdd) {
+      mdd = dd
+      mddPct = peakSoFar > 0 ? (dd / peakSoFar) * 100 : 0
+    }
   }
-  return mdd
+  return { value: mdd, pct: mddPct }
 })
 
 const up = computed(() => totalPl.value >= 0)
@@ -151,8 +156,9 @@ const tone = (v: number) =>
           <div class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <TrendingDown class="h-3.5 w-3.5" /> Drawdown maks
           </div>
-          <div class="mt-1 font-display text-lg font-bold sm:text-xl" :class="maxDrawdown > 0 ? 'text-destructive' : 'text-foreground'">
-            {{ maxDrawdown > 0 ? '-' : '' }}{{ formatCurrency(maxDrawdown, currency) }}
+          <div class="mt-1 font-display text-lg font-bold sm:text-xl" :class="maxDrawdown.value > 0 ? 'text-destructive' : 'text-foreground'">
+            {{ maxDrawdown.value > 0 ? '-' : '' }}{{ formatCurrency(maxDrawdown.value, currency) }}
+            <span v-if="maxDrawdown.value > 0" class="text-xs font-semibold">(-{{ maxDrawdown.pct.toFixed(1) }}%)</span>
           </div>
         </CardContent>
       </Card>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Trade, TradeRules, ImportantNote, Currency, ExchangeRate } from '~/types/trade'
+import type { Trade, TradeRules, ImportantNote, ExchangeRate } from '~/types/trade'
 import { CURRENCIES } from '~/types/trade'
 import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X, LayoutDashboard, CalendarRange, LineChart, StickyNote, Pencil, Check, Loader2 } from 'lucide-vue-next'
 
@@ -27,7 +27,7 @@ const lastOf = (y: number, m: number) => toDateStr(new Date(y, m + 1, 0))
 // ---- filter periode (sumber utama untuk kartu ringkasan) ----
 const from = ref(firstOf(now.getFullYear(), now.getMonth()))
 const to = ref(lastOf(now.getFullYear(), now.getMonth()))
-const currency = ref<Currency>('USC')
+const currency = useDisplayCurrency()
 
 // bulan yang ditampilkan di grid = bulan dari tanggal "Dari"
 const viewYear = computed(() => Number(from.value.split('-')[0]) || now.getFullYear())
@@ -355,6 +355,9 @@ const dayTone = (total: number) =>
                   <span>{{ t.trade_count ?? 1 }} trade</span>
                   <span class="rounded-md bg-muted px-2 py-0.5 font-semibold">{{ t.currency }}</span>
                 </div>
+              </div>
+              <div v-if="t.pairs?.length" class="mt-2 flex flex-wrap gap-1">
+                <span v-for="p in t.pairs" :key="p" class="rounded bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold text-gold">{{ p }}</span>
               </div>
               <div v-if="t.note" class="rte-content mt-2 border-t pt-2 text-sm" v-html="t.note" />
             </li>

@@ -87,14 +87,14 @@ const minH = computed(() => (props.size === 'lg' ? 'min-h-[68px] sm:min-h-[116px
           v-if="c.items.length"
           type="button"
           class="group relative flex w-full flex-col items-start gap-0.5 border-b border-r p-1.5 text-left transition-colors last:border-r-0 hover:bg-accent/40 focus:outline-none focus-visible:bg-accent/60 sm:p-2"
-          :class="[minH, !c.inMonth && 'bg-muted/20', c.isToday && 'ring-1 ring-inset ring-primary/30']"
+          :class="[minH, !c.inMonth && 'bg-muted/50 opacity-60', c.isToday && 'ring-1 ring-inset ring-primary/30']"
           @click="emit('select', c)"
         >
           <span
             class="flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-medium sm:text-xs"
             :class="c.isToday ? 'bg-primary text-primary-foreground' : c.inMonth ? 'text-foreground' : 'text-muted-foreground/50'"
           >{{ c.day }}</span>
-          <span class="mt-auto w-full truncate text-[11px] font-bold sm:text-sm" :class="toneClass(c.total, true)">
+          <span class="mt-auto w-full truncate text-[11px] font-bold sm:text-sm" :class="[toneClass(c.total, true), !c.inMonth && 'opacity-40']">
             {{ formatCompact(c.total, currency) }}
           </span>
           <StickyNote class="absolute right-1 top-1 h-3 w-3 text-muted-foreground/40 group-hover:text-gold sm:h-3.5 sm:w-3.5" />
@@ -104,7 +104,7 @@ const minH = computed(() => (props.size === 'lg' ? 'min-h-[68px] sm:min-h-[116px
         <div
           v-else
           class="border-b border-r p-1.5 last:border-r-0 sm:p-2"
-          :class="[minH, !c.inMonth && 'bg-muted/20', c.isToday && 'ring-1 ring-inset ring-primary/30']"
+          :class="[minH, !c.inMonth && 'bg-muted/50 opacity-60', c.isToday && 'ring-1 ring-inset ring-primary/30']"
         >
           <span
             class="flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-medium sm:text-xs"
