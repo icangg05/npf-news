@@ -68,7 +68,7 @@ const year = new Date().getFullYear()
 
     <template v-if="!isAuthPage">
       <footer class="border-t py-6 pb-24 text-center text-xs text-muted-foreground sm:pb-6">
-        <p>© {{ year }} AuPulse · Analitik Riwayat NFP × Emas (XAU/USD)</p>
+        <p>© {{ year }} AuPulse · Analitik Riwayat NFP × Emas (XAUUSD)</p>
         <p class="mt-1 text-[11px]">
           Dikembangkan oleh <span class="font-medium text-foreground">Ilmi Faizan</span>
         </p>

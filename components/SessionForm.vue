@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Impact, NfpSession, NfpSessionInput, NfpNewsInput } from '~/types/nfp'
-import { Plus, Trash2, CalendarClock, TrendingUp, Newspaper } from 'lucide-vue-next'
+import { Plus, Trash2, CalendarClock, TrendingUp, Newspaper, Calendar as CalendarIcon } from 'lucide-vue-next'
+import { parseDate, type DateValue } from '@internationalized/date'
 
 const props = defineProps<{
   initial?: NfpSession | null
@@ -14,6 +15,10 @@ const emit = defineEmits<{
 }>()
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+// value tetap singkat (konsisten dgn data lama), label ditampilkan penuh.
+const MONTH_OPTS = MONTHS.map((value, i) => ({ value, label: monthNameFull(i) }))
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
 const PRESETS = ['Non Farm Payrolls', 'Nonfarm Payrolls Private']
 
 interface NewsRow {
@@ -37,6 +42,21 @@ const dt = props.initial ? toDatetimeLocal(props.initial.released_at).split('T')
 const period = ref<string>(props.initial?.period_label ?? '')
 const date = ref<string>(dt[0] ?? '')
 const time = ref<string>(dt[1] ?? '12:30')
+
+// proxy string 'YYYY-MM-DD' <-> DateValue untuk Calendar
+const dateValue = computed<DateValue | undefined>({
+  get: () => (date.value ? parseDate(date.value) : undefined),
+  set: (v) => { date.value = v ? v.toString() : '' },
+})
+// proxy 'HH:MM' <-> jam/menit untuk dua Select
+const hour = computed<string>({
+  get: () => time.value.split(':')[0] ?? '12',
+  set: (h) => { time.value = `${h}:${time.value.split(':')[1] ?? '30'}` },
+})
+const minute = computed<string>({
+  get: () => time.value.split(':')[1] ?? '30',
+  set: (m) => { time.value = `${time.value.split(':')[0] ?? '12'}:${m}` },
+})
 
 // ---- state (kesimpulan reaksi) ----
 const spike = ref<string>(props.initial?.spike ?? '')
@@ -185,17 +205,37 @@ function onSubmit() {
           <Select v-model="period">
             <SelectTrigger><SelectValue placeholder="Pilih bulan" /></SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="m in MONTHS" :key="m" :value="m">{{ m }}</SelectItem>
+              <SelectItem v-for="m in MONTH_OPTS" :key="m.value" :value="m.value">{{ m.label }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
           <Label class="mb-1.5 block">Tanggal rilis *</Label>
-          <Input v-model="date" type="date" />
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button type="button" variant="outline" class="w-full justify-start font-normal" :class="!date && 'text-muted-foreground'">
+                <CalendarIcon class="mr-2 h-4 w-4" />
+                {{ date ? formatDateStr(date) : 'Pilih tanggal' }}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <Calendar v-model="dateValue" />
+            </PopoverContent>
+          </Popover>
         </div>
         <div>
           <Label class="mb-1.5 block">Jam rilis *</Label>
-          <Input v-model="time" type="time" />
+          <div class="flex items-center gap-2">
+            <Select v-model="hour">
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem v-for="h in HOURS" :key="h" :value="h">{{ h }}</SelectItem></SelectContent>
+            </Select>
+            <span class="text-muted-foreground">:</span>
+            <Select v-model="minute">
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem v-for="mn in MINUTES" :key="mn" :value="mn">{{ mn }}</SelectItem></SelectContent>
+            </Select>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -53,7 +53,7 @@ export default defineNuxtConfig({
       title: 'AuPulse',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'description', content: 'AuPulse — pantau denyut emas (XAU/USD) terhadap rilis Non-Farm Payrolls.' },
+        { name: 'description', content: 'AuPulse — pantau denyut emas (XAUUSD) terhadap rilis Non-Farm Payrolls.' },
         { name: 'theme-color', content: '#0B0E14' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
@@ -72,7 +72,7 @@ export default defineNuxtConfig({
     manifest: {
       name: 'AuPulse',
       short_name: 'AuPulse',
-      description: 'AuPulse — pantau denyut emas (XAU/USD) terhadap rilis Non-Farm Payrolls.',
+      description: 'AuPulse — pantau denyut emas (XAUUSD) terhadap rilis Non-Farm Payrolls.',
       lang: 'id',
       theme_color: '#0B0E14',
       background_color: '#0B0E14',

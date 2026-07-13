@@ -7,7 +7,7 @@ Gunakan Trik Cron Job / Ping Otomatis: Jika ingin tetap gratis, Anda bisa memanf
 
 # Riwayat NFP vs Emas + Jurnal Trading per-user
 
-Pencatatan riwayat rilis **Non-Farm Payrolls (NFP)** dan dampaknya terhadap harga **emas (XAU/USD)**, plus **jurnal trading per-user** (kalender profit, aturan, kurva ekuitas).
+Pencatatan riwayat rilis **Non-Farm Payrolls (NFP)** dan dampaknya terhadap harga **emas (XAUUSD)**, plus **jurnal trading per-user** (kalender profit, aturan, kurva ekuitas).
 
 **Stack:** Nuxt 3 · TailwindCSS · **shadcn-nuxt** (reka-ui) · Supabase (Postgres + Auth) · Docker.
 

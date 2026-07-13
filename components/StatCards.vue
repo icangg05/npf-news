@@ -19,16 +19,18 @@ const stats = computed(() => {
   const spikes = list.filter((s) => s.spike === 'up' || s.spike === 'down').length
   const oneWay = list.filter((s) => s.spike === 'one_way').length
 
-  // kesesuaian arah: prediksi = arah consensus terhadap previous (naik/turun).
-  // benar bila actual benar-benar bergerak ke arah yang sama dari previous.
-  // contoh: prev 150, cons 110 (prediksi turun), actual 90 -> turun -> benar.
+  // kesesuaian: prediksi = arah consensus terhadap previous (naik/turun),
+  // benar bila actual benar-benar mencapai sisi consensus (bukan sekadar searah dari previous).
+  // turun (cons < prev): benar bila actual <= consensus. naik (cons > prev): benar bila actual >= consensus.
+  // contoh: prev 177, cons 85 (prediksi turun), actual 120 -> 120 > 85 -> salah.
   const predicted = news.filter(
     (n) => n.actual != null && n.consensus != null && n.previous != null && n.consensus !== n.previous,
   )
   const correct = predicted.filter((n) => {
     const predUp = (n.consensus as number) > (n.previous as number)
-    const actUp = (n.actual as number) > (n.previous as number)
-    return (n.actual as number) !== (n.previous as number) && predUp === actUp
+    return predUp
+      ? (n.actual as number) >= (n.consensus as number)
+      : (n.actual as number) <= (n.consensus as number)
   }).length
   const accuracy = predicted.length ? Math.round((correct / predicted.length) * 100) : null
 
@@ -55,21 +57,21 @@ const cards = computed(() => [
     value: formatThousands(stats.value.avgMinor),
     icon: Waves,
     tone: 'text-sky-600 dark:text-sky-400',
-    hint: 'Rata-rata pergerakan pips minor emas (XAU/USD) — reaksi awal saat rilis.',
+    hint: 'Rata-rata pergerakan pips minor emas (XAUUSD) — reaksi awal saat rilis.',
   },
   {
     label: 'Rata-rata pips major',
     value: formatThousands(stats.value.avgMajor),
     icon: Activity,
     tone: 'text-indigo-600 dark:text-indigo-400',
-    hint: 'Rata-rata pergerakan pips major emas (XAU/USD) — reaksi lanjutan yang dominan.',
+    hint: 'Rata-rata pergerakan pips major emas (XAUUSD) — reaksi lanjutan yang dominan.',
   },
   {
-    label: 'Akurasi arah prediksi',
+    label: 'Akurasi tembus konsensus',
     value: stats.value.accuracy != null ? `${stats.value.accuracy}%` : '—',
     icon: Gauge,
     tone: 'text-emerald-600 dark:text-emerald-400',
-    hint: 'Persentase rilis yang arah aktualnya (naik/turun dari data sebelumnya) sesuai dengan konsensus.',
+    hint: 'Persentase rilis yang aktualnya benar-benar mendarat di sisi konsensus: prediksi turun (cons < prev) dianggap benar bila actual ≤ konsensus, prediksi naik bila actual ≥ konsensus. Bukan sekadar searah dari data sebelumnya.',
   },
   {
     label: 'Spike / Satu arah',

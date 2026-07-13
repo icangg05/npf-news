@@ -31,8 +31,8 @@ const filtered = computed(() => {
   <div class="space-y-6">
     <PageHero
       :icon="Sparkles"
-      eyebrow="XAU/USD · High impact"
-      subtitle="Rekap historis dampak rilis Non-Farm Payrolls yang sudah lampau terhadap harga emas (XAU/USD), dikelompokkan per sesi rilis."
+      eyebrow="XAUUSD · High impact"
+      subtitle="Rekap historis dampak rilis Non-Farm Payrolls yang sudah lampau terhadap harga emas (XAUUSD), dikelompokkan per sesi rilis."
     >
       <template #title>Riwayat <span class="text-gold">NFP</span> vs Pergerakan Emas</template>
     </PageHero>
