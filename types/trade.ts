@@ -76,4 +76,4 @@ export interface ImportantNote {
 export const CURRENCIES: Currency[] = ['USC', 'USD', 'IDR']
 
 // Pair yang bisa dipilih saat input trade (boleh lebih dari satu).
-export const PAIRS: string[] = ['XAUUSD', 'XAGUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'BTCUSD', 'ETHUSD']
+export const PAIRS: string[] = ['XAUUSD', 'XAGUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD', 'BTCUSD', 'ETHUSD']

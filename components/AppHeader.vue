@@ -35,7 +35,7 @@ async function logout() {
           <LogOut class="h-4 w-4" /> Keluar
         </Button>
         <Button v-else variant="outline" size="sm" as-child>
-          <NuxtLink to="/login">Login admin</NuxtLink>
+          <NuxtLink to="/login">Login</NuxtLink>
         </Button>
         <div class="ml-1 h-5 w-px bg-border" />
         <ThemeToggle />
