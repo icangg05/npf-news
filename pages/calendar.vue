@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Trade, TradeRules, ImportantNote, ExchangeRate } from '~/types/trade'
 import { CURRENCIES } from '~/types/trade'
-import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X, LayoutDashboard, CalendarRange, LineChart, StickyNote, Pencil, Check, Loader2 } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, RefreshCw, CalendarDays, TrendingUp, TrendingDown, X, LayoutDashboard, CalendarRange, LineChart, StickyNote, Pencil, Check, Loader2, Scale, Award, Flame, Percent, ShieldCheck, Info, Calendar as CalendarIcon } from 'lucide-vue-next'
+import { parseDate, type DateValue } from '@internationalized/date'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -28,6 +29,16 @@ const lastOf = (y: number, m: number) => toDateStr(new Date(y, m + 1, 0))
 const from = ref(firstOf(now.getFullYear(), now.getMonth()))
 const to = ref(lastOf(now.getFullYear(), now.getMonth()))
 const currency = useDisplayCurrency()
+
+// proxy string 'YYYY-MM-DD' <-> DateValue untuk Calendar (sama seperti form sesi)
+const fromValue = computed<DateValue | undefined>({
+  get: () => (from.value ? parseDate(from.value) : undefined),
+  set: (v) => { if (v) from.value = v.toString() },
+})
+const toValue = computed<DateValue | undefined>({
+  get: () => (to.value ? parseDate(to.value) : undefined),
+  set: (v) => { if (v) to.value = v.toString() },
+})
 
 // bulan yang ditampilkan di grid = bulan dari tanggal "Dari"
 const viewYear = computed(() => Number(from.value.split('-')[0]) || now.getFullYear())
@@ -117,6 +128,89 @@ const winrate = computed(() => {
   return decided ? Math.round((wins.value / decided) * 100) : null
 })
 
+// rata-rata dihitung hanya atas hari yang ada trade-nya
+const avgDaily = computed(() => rangeTrades.value.length ? rangeTotal.value / rangeTrades.value.length : 0)
+const avgWeekly = computed(() => avgDaily.value * 7)
+
+// ---- metrik evaluasi (semua ikut filter [from,to] + mata uang) ----
+// P/L agregat per tanggal (bukan per-entri) → basis metrik hari yang benar
+const dailyPl = computed(() => {
+  const m = new Map<string, number>()
+  for (const t of rangeTrades.value)
+    m.set(t.trade_date, (m.get(t.trade_date) ?? 0) + convert(t.amount, t.currency, currency.value, usdIdr.value))
+  return [...m.entries()].map(([date, pl]) => ({ date, pl })).sort((a, b) => a.date.localeCompare(b.date))
+})
+
+// Profit factor = Σ hari profit ÷ |Σ hari loss|
+const profitFactor = computed(() => {
+  let gain = 0, lossAbs = 0
+  for (const { pl } of dailyPl.value) { if (pl > 0) gain += pl; else if (pl < 0) lossAbs += -pl }
+  if (lossAbs === 0) return gain > 0 ? Infinity : null
+  return gain / lossAbs
+})
+
+// Hari terbaik & terburuk
+const bestDay = computed(() => dailyPl.value.reduce<{ date: string; pl: number } | null>((b, d) => (!b || d.pl > b.pl ? d : b), null))
+const worstDay = computed(() => dailyPl.value.reduce<{ date: string; pl: number } | null>((w, d) => (!w || d.pl < w.pl ? d : w), null))
+
+// Rata-rata hari profit vs hari loss (null = tak ada hari jenis itu → tampil '—', bukan 0)
+const avgWinDay = computed<number | null>(() => {
+  const w = dailyPl.value.filter((d) => d.pl > 0)
+  return w.length ? w.reduce((a, d) => a + d.pl, 0) / w.length : null
+})
+const avgLossDay = computed<number | null>(() => {
+  const l = dailyPl.value.filter((d) => d.pl < 0)
+  return l.length ? l.reduce((a, d) => a + d.pl, 0) / l.length : null
+})
+
+// Kepatuhan aturan: batas dikonversi dari base_currency aturan ke mata uang tampilan
+const ruleLimits = computed(() => {
+  const base = rules.value?.base_currency ?? 'USC'
+  const loss = rules.value?.daily_loss_limit
+  const target = rules.value?.daily_profit_target
+  return {
+    loss: loss != null ? convert(loss, base, currency.value, usdIdr.value) : null,
+    target: target != null ? convert(target, base, currency.value, usdIdr.value) : null,
+  }
+})
+const hasRuleLimits = computed(() => ruleLimits.value.loss != null || ruleLimits.value.target != null)
+const daysBreachLoss = computed(() => {
+  const lim = ruleLimits.value.loss
+  return lim == null ? 0 : dailyPl.value.filter((d) => d.pl <= -Math.abs(lim)).length
+})
+const daysHitTarget = computed(() => {
+  const t = ruleLimits.value.target
+  return t == null ? 0 : dailyPl.value.filter((d) => d.pl >= t).length
+})
+
+// Streak beruntun (terpanjang + berjalan), tanda dari hari terakhir
+const streaks = computed(() => {
+  let longWin = 0, longLoss = 0, curWin = 0, curLoss = 0
+  for (const { pl } of dailyPl.value) {
+    if (pl > 0) { curWin++; curLoss = 0; longWin = Math.max(longWin, curWin) }
+    else if (pl < 0) { curLoss++; curWin = 0; longLoss = Math.max(longLoss, curLoss) }
+    else { curWin = 0; curLoss = 0 }
+  }
+  const last = dailyPl.value[dailyPl.value.length - 1]?.pl ?? 0
+  const current = last > 0 ? curWin : last < 0 ? -curLoss : 0
+  return { longWin, longLoss, current }
+})
+
+// Return % periode terhadap modal awal
+const returnPct = computed(() => (modalAwal.value ? (rangeTotal.value / modalAwal.value) * 100 : null))
+
+// Performa per hari-pekan (Senin–Minggu)
+const WEEKDAY_LABELS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+const byWeekday = computed(() => {
+  const totals = Array(7).fill(0) as number[]
+  for (const { date, pl } of dailyPl.value) {
+    const idx = (new Date(date).getDay() + 6) % 7 // 0=Sen
+    totals[idx] += pl
+  }
+  return WEEKDAY_LABELS.map((label, i) => ({ label, total: totals[i] }))
+})
+
+
 // navigasi bulan menyetel filter ke bulan tsb
 function shiftMonth(delta: number) {
   const d = new Date(viewYear.value, viewMonth.value + delta, 1)
@@ -163,6 +257,75 @@ const dayTradeCount = computed(() =>
 )
 const dayTone = (total: number) =>
   total > 0 ? 'text-emerald-600 dark:text-emerald-400' : total < 0 ? 'text-destructive' : 'text-muted-foreground'
+
+// ---- deskriptor kartu (data-driven) + tooltip penjelasan, pola sama seperti StatCards ----
+const EMERALD = 'text-emerald-600 dark:text-emerald-400'
+// tingkatan winrate realistis untuk trader profesional: <40 buruk, 40–49 pas-pasan, 50–59 baik, ≥60 sangat baik
+const winrateTone = computed(() => {
+  const w = winrate.value
+  if (w == null) return ''
+  if (w < 40) return 'text-destructive'
+  if (w < 50) return 'text-orange-500'
+  if (w < 60) return 'text-amber-500'
+  return EMERALD
+})
+
+// Grup 1 — Ringkasan cepat
+const ringkasanCards = computed(() => [
+  { key: 'total', label: 'Total periode', icon: TrendingUp, value: formatCurrency(rangeTotal.value, currency.value), tone: dayTone(rangeTotal.value),
+    hint: 'Jumlah seluruh profit/loss pada rentang tanggal terpilih, dalam mata uang tampilan.' },
+  { key: 'winrate', label: 'Winrate', icon: Percent, value: winrate.value != null ? `${winrate.value}%` : '—', tone: winrateTone.value,
+    hint: 'Persentase hari untung dari total hari untung + rugi. Warna: <40% merah, 40–49% oranye, 50–59% kuning, ≥60% hijau — kisaran realistis untuk trader profesional.' },
+  { key: 'pl', label: 'Hari profit / loss', icon: Scale, dual: { a: `${wins.value}`, b: `${loss.value}` }, sub: 'hari untung / rugi', tone: 'text-foreground',
+    hint: 'Banyaknya hari untung (hijau) berbanding hari rugi (merah) pada rentang ini.' },
+  { key: 'days', label: 'Total hari', icon: CalendarDays, value: `${rangeTrades.value.length}`, sub: 'hari tercatat', tone: 'text-foreground',
+    hint: 'Banyaknya hari yang punya catatan trade pada rentang ini.' },
+  { key: 'avgd', label: 'Rata-rata harian', icon: TrendingUp, value: formatCurrency(avgDaily.value, currency.value), tone: dayTone(avgDaily.value),
+    hint: 'Total periode dibagi jumlah hari yang ada trade-nya (bukan semua hari kalender).' },
+  { key: 'avgw', label: 'Rata-rata mingguan', icon: CalendarRange, value: formatCurrency(avgWeekly.value, currency.value), tone: dayTone(avgWeekly.value),
+    hint: 'Rata-rata harian dikali 7 — perkiraan kasar pendapatan per minggu.' },
+])
+
+// Grup 2 — Evaluasi
+const evaluasiCards = computed(() => [
+  { key: 'pf', label: 'Profit factor', icon: Scale,
+    value: profitFactor.value == null ? '—' : profitFactor.value === Infinity ? '∞' : profitFactor.value.toFixed(2),
+    tone: profitFactor.value == null ? '' : profitFactor.value >= 1 ? EMERALD : 'text-destructive',
+    hint: 'Total profit hari untung ÷ total rugi hari rugi. >1 = untung lebih besar dari rugi (sistem menguntungkan); ≥1,5 umumnya sehat; <1 = rugi bersih.' },
+  { key: 'ret', label: 'Return periode', icon: Percent,
+    value: returnPct.value == null ? '—' : `${returnPct.value >= 0 ? '+' : ''}${returnPct.value.toFixed(1)}%`,
+    tone: returnPct.value == null ? '' : dayTone(returnPct.value),
+    hint: 'Total periode dibagi modal awal (dari halaman Aturan), dalam persen. Pertumbuhan modal untuk rentang ini.' },
+  { key: 'best', label: 'Hari terbaik', icon: Award, value: bestDay.value ? formatCompact(bestDay.value.pl, currency.value) : '—',
+    sub: bestDay.value ? formatDateStr(bestDay.value.date) : undefined, tone: EMERALD,
+    hint: 'Hari dengan profit tertinggi pada rentang ini, beserta tanggalnya.' },
+  { key: 'worst', label: 'Hari terburuk', icon: TrendingDown, value: worstDay.value ? formatCompact(worstDay.value.pl, currency.value) : '—',
+    sub: worstDay.value ? formatDateStr(worstDay.value.date) : undefined, tone: 'text-destructive',
+    hint: 'Hari dengan kerugian terbesar pada rentang ini, beserta tanggalnya.' },
+  { key: 'awin', label: 'Rata-rata hari profit', icon: TrendingUp, value: avgWinDay.value == null ? '—' : formatCurrency(avgWinDay.value, currency.value), tone: avgWinDay.value == null ? '' : EMERALD,
+    hint: 'Rata-rata besar profit pada hari-hari yang untung saja. "—" bila tak ada hari untung pada rentang ini.' },
+  { key: 'aloss', label: 'Rata-rata hari loss', icon: TrendingDown, value: avgLossDay.value == null ? '—' : formatCurrency(avgLossDay.value, currency.value), tone: avgLossDay.value == null ? '' : 'text-destructive',
+    hint: 'Rata-rata besar rugi pada hari-hari yang rugi saja. "—" bila tak ada hari rugi. Kalau jauh lebih besar dari rata-rata hari profit, berarti menang kecil kalah besar.' },
+  { key: 'streak', label: 'Streak', icon: Flame,
+    value: streaks.value.current === 0 ? '—' : `${Math.abs(streaks.value.current)} hari ${streaks.value.current > 0 ? 'profit' : 'loss'}`,
+    sub: `Terpanjang: ${streaks.value.longWin}W / ${streaks.value.longLoss}L`,
+    tone: streaks.value.current > 0 ? EMERALD : streaks.value.current < 0 ? 'text-destructive' : '',
+    hint: 'Beruntun hari untung/rugi berjalan dari hari terakhir. "Terpanjang" = rekor beruntun untung (W) dan rugi (L) pada rentang ini — sinyal disiplin/tilt.' },
+  { key: 'rules', label: 'Kepatuhan aturan', icon: ShieldCheck,
+    value: hasRuleLimits.value ? `${daysBreachLoss.value} / ${daysHitTarget.value}` : '—',
+    sub: hasRuleLimits.value ? 'tembus loss / capai target' : 'atur batas di Aturan', tone: 'text-foreground',
+    hint: 'Berapa hari menembus batas loss harian, dan berapa hari mencapai target profit harian. Batas diatur di halaman Aturan.' },
+])
+
+const cardGroups = computed(() => [
+  { title: 'Ringkasan', cards: ringkasanCards.value },
+  { title: 'Evaluasi', cards: evaluasiCards.value },
+])
+
+const weekdayHint = 'Total P/L dikelompokkan per hari dalam seminggu — membantu melihat hari mana yang paling menguntungkan atau rawan rugi.'
+
+// Hover tak ada di layar sentuh: simpan kartu aktif agar tap juga membuka penjelasan.
+const openCard = ref<string | null>(null)
 </script>
 
 <template>
@@ -223,16 +386,32 @@ const dayTone = (total: number) =>
 
       <!-- ===== TAB 1: Ringkasan (kontrol + statistik + kalender) ===== -->
       <TabsContent value="ringkasan" class="space-y-5">
-        <!-- Kontrol + filter -->
+        <!-- Kontrol + filter (date picker sama seperti form sesi) -->
         <Card>
           <CardContent class="flex flex-wrap items-end gap-3 p-4">
             <div>
               <Label class="mb-1.5 block text-xs text-muted-foreground">Dari</Label>
-              <Input v-model="from" type="date" class="w-36" />
+              <Popover>
+                <PopoverTrigger as-child>
+                  <Button type="button" variant="outline" class="w-44 justify-start font-normal" :class="!from && 'text-muted-foreground'">
+                    <CalendarIcon class="mr-2 h-4 w-4" />
+                    {{ from ? formatDateStr(from) : 'Pilih tanggal' }}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent><Calendar v-model="fromValue" /></PopoverContent>
+              </Popover>
             </div>
             <div>
               <Label class="mb-1.5 block text-xs text-muted-foreground">Sampai</Label>
-              <Input v-model="to" type="date" class="w-36" />
+              <Popover>
+                <PopoverTrigger as-child>
+                  <Button type="button" variant="outline" class="w-44 justify-start font-normal" :class="!to && 'text-muted-foreground'">
+                    <CalendarIcon class="mr-2 h-4 w-4" />
+                    {{ to ? formatDateStr(to) : 'Pilih tanggal' }}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent><Calendar v-model="toValue" /></PopoverContent>
+              </Popover>
             </div>
 
             <!-- Reset rentang tanggal -->
@@ -242,45 +421,66 @@ const dayTone = (total: number) =>
           </CardContent>
         </Card>
 
-        <!-- Ringkasan (kartu profit & loss digabung agar ringkas) -->
-        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Card class="hover-lift">
-            <CardContent class="p-4">
-              <div class="text-xs font-medium text-muted-foreground">Total periode</div>
-              <div class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="dayTone(rangeTotal)">
-                {{ formatCurrency(rangeTotal, currency) }}
-              </div>
+        <!-- ===== Grup kartu (Ringkasan + Evaluasi), tiap kartu punya tooltip penjelasan ===== -->
+        <section v-for="g in cardGroups" :key="g.title" class="space-y-2.5">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{{ g.title }}</h3>
+          <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <HoverCard
+              v-for="c in g.cards"
+              :key="c.key"
+              :open="openCard === c.key"
+              @update:open="(v: boolean) => { if (v) openCard = c.key; else if (openCard === c.key) openCard = null }"
+            >
+              <HoverCardTrigger>
+                <Card class="hover-lift cursor-help" @click="openCard = openCard === c.key ? null : c.key">
+                  <CardContent class="p-4">
+                    <div class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <component :is="c.icon" class="h-3.5 w-3.5" /> {{ c.label }}
+                    </div>
+                    <div v-if="c.dual" class="mt-1 flex items-baseline gap-2 font-display text-xl font-bold sm:text-2xl">
+                      <span :class="EMERALD">{{ c.dual.a }}</span>
+                      <span class="text-sm text-border">/</span>
+                      <span class="text-destructive">{{ c.dual.b }}</span>
+                    </div>
+                    <div v-else class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="c.tone">{{ c.value }}</div>
+                    <div v-if="c.sub" class="text-[11px] text-muted-foreground">{{ c.sub }}</div>
+                  </CardContent>
+                </Card>
+              </HoverCardTrigger>
+              <HoverCardContent class="w-64">
+                <div class="flex items-center gap-2">
+                  <component :is="c.icon" class="h-4 w-4 text-primary" />
+                  <span class="text-sm font-semibold">{{ c.label }}</span>
+                </div>
+                <p class="mt-2 text-xs leading-relaxed text-muted-foreground">{{ c.hint }}</p>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        </section>
+
+        <!-- ===== Rincian: performa per hari ===== -->
+        <section class="space-y-2.5">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rincian</h3>
+          <Card>
+            <CardHeader class="flex flex-row items-center gap-2 space-y-0 pb-3">
+              <div class="rounded-lg bg-gold/10 p-2 text-gold"><CalendarRange class="h-4 w-4" /></div>
+              <CardTitle class="text-base">Performa per Hari</CardTitle>
+              <HoverCard :open="openCard === 'weekday'" @update:open="(v: boolean) => { if (v) openCard = 'weekday'; else if (openCard === 'weekday') openCard = null }">
+                <HoverCardTrigger><Info class="h-4 w-4 cursor-help text-muted-foreground" @click="openCard = openCard === 'weekday' ? null : 'weekday'" /></HoverCardTrigger>
+                <HoverCardContent class="w-64"><p class="text-xs leading-relaxed text-muted-foreground">{{ weekdayHint }}</p></HoverCardContent>
+              </HoverCard>
+            </CardHeader>
+            <CardContent>
+              <!-- mobile: per-kolom (label kiri, angka kanan); sm+: satu baris 7 kolom (label atas, angka bawah) -->
+              <ul class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-7 sm:gap-1 sm:text-center">
+                <li v-for="d in byWeekday" :key="d.label" class="flex min-w-0 items-center justify-between sm:flex-col sm:items-stretch sm:justify-start">
+                  <span class="truncate text-[11px] font-medium text-muted-foreground">{{ d.label }}</span>
+                  <span class="truncate font-display text-sm font-bold sm:mt-1 sm:text-xs md:text-sm" :class="d.total === 0 ? 'text-muted-foreground/50' : dayTone(d.total)">{{ formatCompact(d.total, currency) }}</span>
+                </li>
+              </ul>
             </CardContent>
           </Card>
-          <Card class="hover-lift">
-            <CardContent class="p-4">
-              <div class="text-xs font-medium text-muted-foreground">Winrate</div>
-              <div class="mt-1 font-display text-xl font-bold sm:text-2xl" :class="winrate != null && winrate >= 50 ? 'text-emerald-600 dark:text-emerald-400' : winrate != null ? 'text-destructive' : ''">
-                {{ winrate != null ? `${winrate}%` : '—' }}
-              </div>
-            </CardContent>
-          </Card>
-          <Card class="hover-lift">
-            <CardContent class="p-4">
-              <div class="text-xs font-medium text-muted-foreground">Hari profit / loss</div>
-              <div class="mt-1 flex items-baseline gap-2.5 font-display text-xl font-bold sm:text-2xl">
-                <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><TrendingUp class="h-4 w-4" /> {{ wins }}</span>
-                <span class="text-border">/</span>
-                <span class="flex items-center gap-1 text-destructive"><TrendingDown class="h-4 w-4" /> {{ loss }}</span>
-                <span class="text-xs font-medium text-muted-foreground">hari</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card class="hover-lift">
-            <CardContent class="p-4">
-              <div class="text-xs font-medium text-muted-foreground">Total hari</div>
-              <div class="mt-1 flex items-baseline gap-1.5 font-display text-xl font-bold sm:text-2xl">
-                {{ rangeTrades.length }}
-                <span class="text-xs font-medium text-muted-foreground">hari</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        </section>
 
         <!-- Catatan penting (kesimpulan / point-point) -->
         <Card>
